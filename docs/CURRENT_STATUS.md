@@ -1,6 +1,6 @@
 # Current Status
 
-Last offline validation: `PENDING_FINAL_RUN`
+Last offline validation: `mic_offline_20260901_164521_utc_2628c1294c8b`
 
 ## Milestones
 
@@ -22,6 +22,12 @@ and REQP-181 Advisory inside Xilinx interconnect/DMA structures.
 The host C contract test compiled with `-Werror`. SDK 2019.1 built the BSP and
 `mic_dma_app.elf` (text 45,032; data 2,648; bss 25,192 bytes). This does not
 prove DMA or DDR on hardware.
+
+The final bounded regression runner passed Python, host C, OOC, SDK and MATLAB
+as `mic_offline_20260901_164521_utc_2628c1294c8b`. The separately executed
+XSim and full Vivado logs are retained under the project build/report paths;
+Vivado 2019.1's second-simulation cleanup is not included in the bounded runner
+because it can hang after the simulation PASS token is emitted.
 
 ### M3 - MIC_ETHERNET_MATLAB_PASS
 
@@ -53,4 +59,3 @@ linear-array angle within the asserted tolerances. No FPGA offload exists.
 3. Confirm the AX7Z020 PS7/DDR/Ethernet preset against the matching vendor project.
 4. Implement CDC/overflow handling and XDC for the confirmed real frontend.
 5. Perform staged board bring-up: clock/reset, GPIO, DMA/DDR, then Ethernet.
-
