@@ -51,6 +51,7 @@ def source_tree_hash() -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-full-vivado", action="store_true")
+    parser.add_argument("--skip-vivado-rtl", action="store_true")
     parser.add_argument("--skip-sdk", action="store_true")
     parser.add_argument("--skip-matlab", action="store_true")
     args = parser.parse_args()
@@ -101,13 +102,6 @@ def main() -> int:
             None,
         ),
         (
-            "vivado_rtl",
-            [vivado, "-mode", "batch", "-nojournal", "-nolog", "-notrace",
-             "-source", "vivado/run_rtl_tests.tcl"],
-            "MIC_RTL_SUITE_PASS",
-            None,
-        ),
-        (
             "vivado_ooc",
             [vivado, "-mode", "batch", "-nojournal", "-nolog", "-notrace",
              "-source", "vivado/run_ooc.tcl"],
@@ -115,6 +109,14 @@ def main() -> int:
             None,
         ),
     ]
+    if not args.skip_vivado_rtl:
+        steps.insert(3, (
+            "vivado_rtl",
+            [vivado, "-mode", "batch", "-nojournal", "-nolog", "-notrace",
+             "-source", "vivado/run_rtl_tests.tcl"],
+            "MIC_RTL_SUITE_PASS",
+            None,
+        ))
     if not args.skip_full_vivado:
         steps.append((
             "vivado_full",
@@ -129,7 +131,10 @@ def main() -> int:
         steps.append(("sdk_build", [xsct, "sw/build_sdk.tcl"], "MIC_SDK_BUILD_PASS", sdk_env))
     if not args.skip_matlab:
         command = "cd('D:/microphone'); addpath('matlab'); run_all_tests"
-        steps.append(("matlab", [matlab, "-batch", command], "MIC_GCC_PHAT_DOA_PASS", None))
+        matlab_env = os.environ.copy()
+        matlab_env["MATLAB_PREFDIR"] = str(run_dir / "matlab_pref")
+        (run_dir / "matlab_pref").mkdir(parents=True, exist_ok=True)
+        steps.append(("matlab", [matlab, "-batch", command], "MIC_GCC_PHAT_DOA_PASS", matlab_env))
 
     summary = {
         "run_id": run_id,
@@ -145,12 +150,16 @@ def main() -> int:
     }
     for name, command, required_token, environment in steps:
         print(f"STEP_START={name}", flush=True)
-        completed = subprocess.run(
-            command, cwd=ROOT, env=environment, text=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            errors="replace", check=False
-        )
-        output = completed.stdout
+        try:
+            completed = subprocess.run(
+                command, cwd=ROOT, env=environment, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                errors="replace", check=False, timeout=600
+            )
+            output = completed.stdout
+        except subprocess.TimeoutExpired as timeout:
+            output = (timeout.stdout or "") + "\nMIC_REGRESSION_TOOL_TIMEOUT\n"
+            completed = subprocess.CompletedProcess(command, 124, output)
         (run_dir / f"{name}.log").write_text(output, encoding="utf-8", errors="replace")
         token_ok = not required_token or required_token in output
         passed = completed.returncode == 0 and token_ok
@@ -176,4 +185,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
