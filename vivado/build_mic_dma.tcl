@@ -9,10 +9,12 @@ create_project -force mic_dma $build_dir -part xc7z020clg400-2
 set_property target_language Verilog [current_project]
 add_files -norecurse [list \
     [file join $repo_dir rtl pcm_synthetic_source.sv] \
+    [file join $repo_dir rtl lc_ai_k210_7mic_frontend.sv] \
     [file join $repo_dir rtl pcm_axis_packer.sv] \
     [file join $repo_dir rtl mic_dma_pipeline.sv] \
     [file join $repo_dir rtl mic_dma_pipeline_ref.v] \
     [file join $repo_dir rtl resetn_inverter.v]]
+add_files -fileset constrs_1 -norecurse [file join $repo_dir vivado lc_ai_k210_7mic.xdc]
 update_compile_order -fileset sources_1
 create_bd_design mic_dma_system
 source [file join $script_dir create_mic_dma_bd.tcl]
@@ -36,10 +38,10 @@ report_drc -file [file join $report_dir mic_dma_synth_drc.rpt]
 write_hwdef -force -file [file join $report_dir mic_dma.hdf]
 close_design
 
-launch_runs impl_1 -to_step route_design -jobs 2
+launch_runs impl_1 -to_step write_bitstream -jobs 2
 wait_on_run impl_1
 if {[get_property PROGRESS [get_runs impl_1]] ne "100%" ||
-    [get_property STATUS [get_runs impl_1]] ni {"route_design Complete!" "Complete"}} {
+    [get_property STATUS [get_runs impl_1]] ni {"write_bitstream Complete!" "route_design Complete!" "Complete"}} {
     error "implementation did not complete: [get_property STATUS [get_runs impl_1]]"
 }
 open_run impl_1

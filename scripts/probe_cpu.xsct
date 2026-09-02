@@ -1,0 +1,15 @@
+connect
+targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
+set stop_ok [expr {![catch {stop} stop_error]}]
+if {!$stop_ok} { puts "STOP_RESULT=$stop_error" }
+puts "CPU_PC_BEFORE=[rrd pc]"
+if {$stop_ok} {
+    if {[catch {con} run_error]} { puts "RUN_RESULT=$run_error" }
+    after 1000
+    if {[catch {stop} stop_error2]} { puts "STOP_AFTER_RESULT=$stop_error2" }
+} else {
+    puts "CPU_RUN_SKIPPED=processor-was-already-running-or-could-not-halt"
+}
+puts "CPU_PC_AFTER=[rrd pc]"
+disconnect
+exit 0

@@ -2,11 +2,20 @@
 
 ## Scope
 
-The current baseline is an offline-verifiable microphone data path for the
+The project contains an offline-verifiable path plus a staged physical
 AX7Z020 (`xc7z020clg400-2`). Physical microphone facts are UNKNOWN, so the
-board-facing frontend is deliberately marked `REAL_MIC_PROTOCOL_PENDING`.
+LC-AI-K210-7Mic frontend for the AX7Z020 (`xc7z020clg400-2`).
 
 ```text
+LC-AI-K210-7Mic I2S frontend (BCK 3.125 MHz, WS 48.828125 kHz planned)
+  -> seven PCM16 channels plus a forced-zero eighth channel
+  -> PCM16-to-AXIS32 packer
+  -> AXI DMA Simple S2MM
+  -> PS7 S_AXI_HP0
+  -> DDR buffer contract
+  -> versioned UDP packet format
+  -> Python/MATLAB channel x sample reconstruction
+
 synthetic PCM16 source
   -> PCM16-to-AXIS32 packer
   -> AXI DMA Simple S2MM
@@ -23,15 +32,17 @@ reset release. DMA S2MM interrupt is connected to `IRQ_F2P`; tonight's
 software build uses bounded polling and retains a reset-based error recovery
 path.
 
-## M1 frontend abstraction
+## M1 frontend
 
 `pcm_synthetic_source` generates either a 32-entry Q1.15 sine or a seeded
 xorshift pseudo-signal. Channel `c` is delayed by `c` samples and attenuated by
 an arithmetic right shift of `min(c, 15)`. It emits one PCM sample per
 valid/ready transfer and carries channel, sample, frame and final-beat metadata.
 
-`real_mic_frontend_pending` is intentionally inert. It has no GPIO, clock or
-protocol assumptions.
+`lc_ai_k210_7mic_frontend` generates BCK and WS from the 50 MHz PS FCLK,
+captures 32-bit left/right slots and maps them to M0..M6 plus a zero channel.
+PCM extraction and I2S edge choice remain provisional until a real ILA waveform
+is captured.
 
 ## M2 DMA path
 
@@ -56,4 +67,3 @@ duplicates and malformed packets are counted and ignored.
 MATLAB contains an offline GCC-PHAT/TDOA and linear-array broadside-angle
 golden model. No GCC-PHAT, MUSIC, EVD, matrix decomposition or beamforming is
 implemented in FPGA logic.
-

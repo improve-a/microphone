@@ -42,15 +42,26 @@ PHY path was run.
 Offline PASS. MATLAB GCC-PHAT recovers known 0..7 sample TDOAs and the expected
 linear-array angle within the asserted tolerances. No FPGA offload exists.
 
+### Physical bring-up status
+
+Environment and JTAG identification passed on 2026-09-02: Vivado/XSCT 2019.1,
+XC7Z020 and both Cortex-A9 targets were detected. The bitstream and ELF were
+downloaded volatile-only and PS7 initialization completed. This is recorded as
+`MIC_ENVIRONMENT_PHYSICAL_PASS`; it does not imply microphone, DMA, DDR,
+Ethernet or MATLAB physical PASS.
+
+The next physical gate is an ILA capture of BCK/WS/D0-D3. Hardware Manager Tcl
+is unavailable in Vivado batch mode on this installation; use the generated
+`.ltx` with Vivado GUI for waveform access.
+
 ## Explicitly not tested
 
-- no JTAG;
-- no board programming;
-- no physical DDR test;
-- no physical Ethernet test;
-- no real microphone;
-- no GPIO/XDC hardware verification;
-- no ILA or Hardware Manager.
+- no real ILA waveform or measured BCK/WS frequency;
+- no confirmed I2S edge/bit alignment;
+- no physical microphone PCM acceptance;
+- no physical DDR/DMA acceptance;
+- no lwIP UDP transmission or MATLAB live packet;
+- no QSPI/Flash write (intentionally).
 
 ## Next physical steps
 

@@ -1,0 +1,27 @@
+# Volatile-only AX7Z020 programming and PS7 clock initialization.
+foreach var {MIC_BITFILE MIC_INIT_TCL MIC_ELF} {
+    if {![info exists ::env($var)] || $::env($var) eq ""} { error "$var is required" }
+    if {![file exists [file normalize $::env($var)]]} { error "$var file missing: $::env($var)" }
+}
+set bitfile [file normalize $::env(MIC_BITFILE)]
+set init_tcl [file normalize $::env(MIC_INIT_TCL)]
+set elf [file normalize $::env(MIC_ELF)]
+connect
+puts "MIC_JTAG_TARGETS_BEGIN"
+puts [targets]
+targets -set -nocase -filter {name =~ "xc7z020"}
+fpga -file $bitfile
+puts "MIC_BITSTREAM_VOLATILE_PROGRAM_PASS"
+targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
+if {[catch {rst -processor} reset_error]} { puts "MIC_CPU_RESET_RESULT=$reset_error" }
+after 200
+if {[catch {stop} stop_error]} { puts "MIC_CPU_STOP_RESULT=$stop_error" }
+source $init_tcl
+ps7_init
+ps7_post_config
+puts "MIC_PS7_INIT_PASS"
+dow $elf
+con
+puts "MIC_ELF_VOLATILE_PROGRAM_PASS"
+disconnect
+exit 0
