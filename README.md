@@ -10,3 +10,27 @@ PCM stream and keeps the board-facing frontend behind
 
 Development targets Vivado and Xilinx SDK 2019.1. No board programming or
 physical hardware access is part of the current baseline.
+
+## Offline regression
+
+The complete command-line gate auto-detects the installed tools and records a
+run under `evidence/runs/<RUN_ID>`:
+
+```powershell
+python scripts/run_regression.py
+```
+
+Focused gates are also directly reproducible:
+
+```powershell
+python -m unittest discover -s tests -v
+E:\vivado\Vivado\2019.1\bin\vivado.bat -mode batch -source vivado\run_rtl_tests.tcl
+E:\vivado\Vivado\2019.1\bin\vivado.bat -mode batch -source vivado\run_ooc.tcl
+E:\vivado\Vivado\2019.1\bin\vivado.bat -mode batch -source vivado\build_mic_dma.tcl
+E:\vivado\SDK\2019.1\bin\xsct.bat sw\build_sdk.tcl
+matlab -batch "cd('D:/microphone'); addpath('matlab'); run_all_tests"
+```
+
+See `docs/CURRENT_STATUS.md` before interpreting any PASS token. Offline DMA
+build success is not evidence of physical DDR, Ethernet, GPIO, or microphone
+operation.

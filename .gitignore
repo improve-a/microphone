@@ -49,4 +49,6 @@ codegen/
 evidence/runs/
 reports/generated/
 vectors/generated/
-
+vivado/build/
+sw/build/
+LC-AI-K210-7Mic.zip
