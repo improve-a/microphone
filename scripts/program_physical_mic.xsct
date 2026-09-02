@@ -10,18 +10,28 @@ connect
 puts "MIC_JTAG_TARGETS_BEGIN"
 puts [targets]
 targets -set -nocase -filter {name =~ "xc7z020"}
+if {[catch {rst -system} system_reset_error]} { puts "MIC_SYSTEM_RESET_RESULT=$system_reset_error" }
+after 500
 fpga -file $bitfile
 puts "MIC_BITSTREAM_VOLATILE_PROGRAM_PASS"
+after 500
 targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
-if {[catch {rst -processor} reset_error]} { puts "MIC_CPU_RESET_RESULT=$reset_error" }
-after 200
-if {[catch {stop} stop_error]} { puts "MIC_CPU_STOP_RESULT=$stop_error" }
+if {[catch {stop} stop_error]} { puts "MIC_CPU_PREINIT_STOP_RESULT=$stop_error" }
 source $init_tcl
 ps7_init
 ps7_post_config
 puts "MIC_PS7_INIT_PASS"
+puts "MIC_JTAG_TARGETS_AFTER_PS7_BEGIN"
+puts [targets]
+targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
+if {[catch {rst -processor} reset_error]} { puts "MIC_CPU_RESET_RESULT=$reset_error" }
+after 500
 dow $elf
-con
-puts "MIC_ELF_VOLATILE_PROGRAM_PASS"
+puts "MIC_ELF_DOWNLOAD_PASS"
+if {[catch {con} run_error]} { puts "MIC_CPU_RUN_RESULT=$run_error" }
+after 1000
+puts "MIC_CPU_STATUS=[state]"
+puts "MIC_CPU_PC=[rrd pc]"
+puts "MIC_PS7_ELF_PHYSICAL_PASS"
 disconnect
 exit 0

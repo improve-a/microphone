@@ -8,6 +8,14 @@ set target_list [targets]
 puts "XSCT_TARGET_COUNT=[llength $target_list]"
 foreach target $target_list { puts "XSCT_TARGET=$target" }
 puts "XSCT_TARGETS_END"
+set target_text [join $target_list " "]
+if {[string match "*xc7z020*" $target_text] &&
+    [string match "*Cortex-A9*#0*" $target_text] &&
+    [string match "*Cortex-A9*#1*" $target_text]} {
+    puts "MIC_JTAG_TARGETS_RECOVERED"
+} else {
+    puts "MIC_JTAG_TARGETS_INCOMPLETE"
+}
 if {[catch {targets -set -nocase -filter {name =~ "xc7z020"}} sel_err]} {
     puts "XSCT_TARGET_SELECT_ERROR=$sel_err"
 } else {

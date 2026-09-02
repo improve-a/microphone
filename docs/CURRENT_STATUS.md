@@ -50,9 +50,16 @@ downloaded volatile-only and PS7 initialization completed. This is recorded as
 `MIC_ENVIRONMENT_PHYSICAL_PASS`; it does not imply microphone, DMA, DDR,
 Ethernet or MATLAB physical PASS.
 
-The next physical gate is an ILA capture of BCK/WS/D0-D3. Hardware Manager Tcl
-is unavailable in Vivado batch mode on this installation; use the generated
-`.ltx` with Vivado GUI for waveform access.
+The recovery run after a full power cycle and direct-PC JTAG reached
+`MIC_PS7_ELF_PHYSICAL_PASS`: the physical-mode bitstream and latest ELF were
+downloaded and the A9 was running. UART `COM4` emitted the boot and source
+metadata lines. The CPU then remained in `XAxiDma_Reset`, and the DMA status
+could not be read because the debug halt timed out. Hardware Manager batch,
+Tcl and GUI probes did not expose a usable ILA command path on this Vivado
+installation, so no ILA waveform was obtained.
+
+The next physical gate is an ILA capture of BCK/WS/D0-D3. Do not infer DMA,
+microphone or UDP success from the ELF/CPU token.
 
 ## Explicitly not tested
 

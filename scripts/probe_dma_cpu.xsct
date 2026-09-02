@@ -1,0 +1,14 @@
+connect
+targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
+puts "CPU_STATE=[state]"
+puts "CPU_PC_1=[rrd pc]"
+after 1000
+puts "CPU_PC_2=[rrd pc]"
+if {[catch {stop} stop_error]} { puts "CPU_STOP_RESULT=$stop_error" }
+puts "CPU_PC_STOP=[rrd pc]"
+puts "DMA_S2MM_DMACR=[mrd 0x40400030]"
+puts "DMA_S2MM_DMASR=[mrd 0x40400034]"
+puts "DMA_S2MM_DA=[mrd 0x40400048]"
+puts "DMA_S2MM_LENGTH=[mrd 0x40400058]"
+disconnect
+exit 0
