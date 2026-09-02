@@ -1,0 +1,87 @@
+
+****** Vivado v2019.1 (64-bit)
+  **** SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+  **** IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+    ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+source {scripts\report_dma_connectivity.tcl} -notrace
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'E:/vivado/Vivado/2019.1/data/ip'.
+INFO: [Device 21-403] Loading part xc7z020clg400-2
+INFO: [Netlist 29-17] Analyzing 873 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2019.1
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Timing 38-478] Restoring timing data from binary archive.
+INFO: [Timing 38-479] Binary timing data restore complete.
+INFO: [Project 1-856] Restoring constraints from binary archive.
+INFO: [Project 1-853] Binary constraint restore complete.
+Reading XDEF placement.
+Reading placer database...
+Reading XDEF routing.
+Read XDEF File: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.695 . Memory (MB): peak = 1490.402 ; gain = 1.953
+Restored from archive | CPU: 1.000000 secs | Memory: 0.000000 MB |
+Finished XDEF File Restore: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.696 . Memory (MB): peak = 1490.402 ; gain = 1.953
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.004 . Memory (MB): peak = 1490.402 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 406 instances were transformed.
+  CFGLUT5 => CFGLUT5 (SRLC32E, SRL16E): 396 instances
+  RAM32M => RAM32M (RAMD32, RAMD32, RAMD32, RAMD32, RAMD32, RAMD32, RAMS32, RAMS32): 10 instances
+
+open_run: Time (s): cpu = 00:00:10 ; elapsed = 00:00:20 . Memory (MB): peak = 1490.402 ; gain = 1066.906
+MIC_NETLIST_PROJECT=D:\microphone\vivado\build\mic_dma_m2reset_clean_20260902\mic_dma.xpr
+MIC_NETLIST_PIN=mic_dma_system_i/axi_dma_0/s_axi_lite_aclk NET=mic_dma_system_i/processing_system7_0_FCLK_CLK0 DRIVERS=2 LOADS=9
+MIC_NETLIST_PIN=mic_dma_system_i/axi_dma_0/m_axi_s2mm_aclk NET=mic_dma_system_i/processing_system7_0_FCLK_CLK0 DRIVERS=2 LOADS=9
+MIC_NETLIST_PIN=mic_dma_system_i/axi_dma_0/axi_resetn NET=mic_dma_system_i/proc_sys_reset_0_peripheral_aresetn DRIVERS=1 LOADS=2
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects [get_pins -quiet mic_dma_system_i/gp0_control_interconnect/ACLK]'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/gp0_control_interconnect/ACLK]] -filter {DIRECTION == OUT}'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/gp0_control_interconnect/ACLK]] -filter {DIRECTION == IN}'.
+MIC_NETLIST_PIN=mic_dma_system_i/gp0_control_interconnect/ACLK NET= DRIVERS=0 LOADS=0
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects [get_pins -quiet mic_dma_system_i/gp0_control_interconnect/ARESETN]'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/gp0_control_interconnect/ARESETN]] -filter {DIRECTION == OUT}'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/gp0_control_interconnect/ARESETN]] -filter {DIRECTION == IN}'.
+MIC_NETLIST_PIN=mic_dma_system_i/gp0_control_interconnect/ARESETN NET= DRIVERS=0 LOADS=0
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects [get_pins -quiet mic_dma_system_i/hp0_memory_interconnect/ACLK]'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/hp0_memory_interconnect/ACLK]] -filter {DIRECTION == OUT}'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/hp0_memory_interconnect/ACLK]] -filter {DIRECTION == IN}'.
+MIC_NETLIST_PIN=mic_dma_system_i/hp0_memory_interconnect/ACLK NET= DRIVERS=0 LOADS=0
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects [get_pins -quiet mic_dma_system_i/hp0_memory_interconnect/ARESETN]'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/hp0_memory_interconnect/ARESETN]] -filter {DIRECTION == OUT}'.
+WARNING: [Vivado 12-508] No pins matched 'get_pins -of_objects [get_nets -of_objects [get_pins -quiet mic_dma_system_i/hp0_memory_interconnect/ARESETN]] -filter {DIRECTION == IN}'.
+MIC_NETLIST_PIN=mic_dma_system_i/hp0_memory_interconnect/ARESETN NET= DRIVERS=0 LOADS=0
+MIC_NETLIST_PIN=mic_dma_system_i/proc_sys_reset_0/interconnect_aresetn NET=mic_dma_system_i/proc_sys_reset_0_interconnect_aresetn DRIVERS=1 LOADS=2
+MIC_NETLIST_PIN=mic_dma_system_i/proc_sys_reset_0/peripheral_aresetn NET=mic_dma_system_i/proc_sys_reset_0_peripheral_aresetn DRIVERS=1 LOADS=2
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/gp0_control_interconnect/ACLK'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/ACLK NET=
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/gp0_control_interconnect/M00_ACLK'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/M00_ACLK NET=
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/S00_ACLK NET=mic_dma_system_i/processing_system7_0_FCLK_CLK0
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/s00_couplers/S00_ACLK NET=mic_dma_system_i/gp0_control_interconnect/S00_ACLK
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/gp0_control_interconnect/ARESETN'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/ARESETN NET=
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/gp0_control_interconnect/M00_ARESETN'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/M00_ARESETN NET=
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/S00_ARESETN NET=mic_dma_system_i/proc_sys_reset_0_interconnect_aresetn
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/gp0_control_interconnect/s00_couplers/S00_ARESETN NET=mic_dma_system_i/gp0_control_interconnect/S00_ARESETN
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/hp0_memory_interconnect/ACLK'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/ACLK NET=
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/hp0_memory_interconnect/M00_ACLK'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/M00_ACLK NET=
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/S00_ACLK NET=mic_dma_system_i/processing_system7_0_FCLK_CLK0
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/s00_couplers/S00_ACLK NET=mic_dma_system_i/hp0_memory_interconnect/S00_ACLK
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/hp0_memory_interconnect/ARESETN'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/ARESETN NET=
+WARNING: [Vivado 12-1023] No nets matched for command 'get_nets -of_objects mic_dma_system_i/hp0_memory_interconnect/M00_ARESETN'.
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/M00_ARESETN NET=
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/S00_ARESETN NET=mic_dma_system_i/proc_sys_reset_0_interconnect_aresetn
+MIC_NETLIST_WILDCARD_PIN=mic_dma_system_i/hp0_memory_interconnect/s00_couplers/S00_ARESETN NET=mic_dma_system_i/hp0_memory_interconnect/S00_ARESETN
+MIC_NETLIST_AXI_PIN=mic_dma_system_i/gp0_control_interconnect/M00_AXI_awvalid NET=mic_dma_system_i/gp0_control_interconnect_M00_AXI_AWVALID DRIVERS=1 LOADS=1
+MIC_NETLIST_AXI_PIN=mic_dma_system_i/gp0_control_interconnect/M00_AXI_awready NET=mic_dma_system_i/gp0_control_interconnect_M00_AXI_AWREADY DRIVERS=1 LOADS=1
+MIC_NETLIST_AXI_PIN=mic_dma_system_i/gp0_control_interconnect/M00_AXI_wvalid NET=mic_dma_system_i/gp0_control_interconnect_M00_AXI_WVALID DRIVERS=1 LOADS=1
+MIC_NETLIST_AXI_PIN=mic_dma_system_i/gp0_control_interconnect/M00_AXI_wready NET=mic_dma_system_i/gp0_control_interconnect_M00_AXI_WREADY DRIVERS=1 LOADS=1
+MIC_NETLIST_AXI_PIN=mic_dma_system_i/gp0_control_interconnect/M00_AXI_bvalid NET=mic_dma_system_i/gp0_control_interconnect_M00_AXI_BVALID DRIVERS=1 LOADS=1
+MIC_NETLIST_DMA_CELL=mic_dma_system_i/axi_dma_0
+INFO: [Common 17-206] Exiting Vivado at Wed Sep  2 17:46:37 2026...

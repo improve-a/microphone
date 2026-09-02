@@ -96,17 +96,27 @@ int main(void)
     mic_dma_slot_t slots[MIC_SLOT_COUNT];
     uint32_t timeout, status;
     xil_printf("MIC_DMA_SW_BOOT\r\n");
+    xil_printf("MIC_SW_ENTRY\r\n");
+    xil_printf("MIC_UART_READY\r\n");
     xil_printf("MIC_SOURCE=PHYSICAL_I2S_BCK_HZ=3125000_WS_HZ=48828\r\n");
     if (!mic_layout_slots(XPAR_PS7_DDR_0_S_AXI_BASEADDR,
             XPAR_PS7_DDR_0_S_AXI_HIGHADDR, slots)) return XST_FAILURE;
+    xil_printf("MIC_BEFORE_DMA_LOOKUP\r\n");
     config = XAxiDma_LookupConfig(XPAR_AXIDMA_0_DEVICE_ID);
+    xil_printf("MIC_AFTER_DMA_LOOKUP\r\n");
+    xil_printf("MIC_BEFORE_DMA_CFG\r\n");
     if (config == NULL || XAxiDma_CfgInitialize(&dma, config) != XST_SUCCESS || XAxiDma_HasSg(&dma))
         return XST_FAILURE;
+    xil_printf("MIC_AFTER_DMA_CFG\r\n");
+    xil_printf("MIC_DMA_AXIL_PHYSICAL_PASS\r\n");
     xil_printf("MIC_DMA_DEVICE_ID=%u BASE=0x%08x\r\n",
         (unsigned)XPAR_AXIDMA_0_DEVICE_ID, (unsigned)dma.RegBase);
     prepare_slot(&slots[0]);
+    xil_printf("MIC_CAPTURE_ARMED\r\n");
+    xil_printf("MIC_BEFORE_DMA_TRANSFER\r\n");
     if (XAxiDma_SimpleTransfer(&dma, (UINTPTR)slots[0].payload,
             MIC_FRAME_BYTES, XAXIDMA_DEVICE_TO_DMA) != XST_SUCCESS) return XST_FAILURE;
+    xil_printf("MIC_AFTER_DMA_TRANSFER\r\n");
     for (timeout = 0; timeout < WAIT_LIMIT && XAxiDma_Busy(&dma, XAXIDMA_DEVICE_TO_DMA); ++timeout) {}
     status = XAxiDma_ReadReg(dma.RegBase, XAXIDMA_RX_OFFSET + XAXIDMA_SR_OFFSET);
     xil_printf("MIC_DMA_STATUS=0x%08x TIMEOUT=%u\r\n", (unsigned)status,
@@ -121,6 +131,7 @@ int main(void)
         return XST_FAILURE;
     }
     print_capture_stats(&slots[0]);
+    xil_printf("MIC_CAPTURE_COMPLETE\r\n");
     xil_printf("MIC_DMA_CAPTURE_COMPLETE_NEEDS_PHYSICAL_ACCEPTANCE\r\n");
     return XST_SUCCESS;
 }

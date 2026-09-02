@@ -1,6 +1,10 @@
 set script_dir [file dirname [file normalize [info script]]]
 set repo_dir [file dirname $script_dir]
-set build_dir [file join $script_dir build mic_dma]
+set build_leaf mic_dma
+if {[info exists ::env(MIC_VIVADO_BUILD_LEAF)] && $::env(MIC_VIVADO_BUILD_LEAF) ne ""} {
+    set build_leaf $::env(MIC_VIVADO_BUILD_LEAF)
+}
+set build_dir [file join $script_dir build $build_leaf]
 set report_dir [file join $repo_dir reports generated]
 file mkdir $build_dir
 file mkdir $report_dir

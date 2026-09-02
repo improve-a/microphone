@@ -9,9 +9,10 @@ set elf [file normalize $::env(MIC_ELF)]
 connect
 puts "MIC_JTAG_TARGETS_BEGIN"
 puts [targets]
-targets -set -nocase -filter {name =~ "xc7z020"}
+targets -set -nocase -filter {name =~ "APU"}
 if {[catch {rst -system} system_reset_error]} { puts "MIC_SYSTEM_RESET_RESULT=$system_reset_error" }
 after 500
+targets -set -nocase -filter {name =~ "xc7z020"}
 fpga -file $bitfile
 puts "MIC_BITSTREAM_VOLATILE_PROGRAM_PASS"
 after 500
@@ -28,6 +29,7 @@ if {[catch {rst -processor} reset_error]} { puts "MIC_CPU_RESET_RESULT=$reset_er
 after 500
 dow $elf
 puts "MIC_ELF_DOWNLOAD_PASS"
+after 2000
 if {[catch {con} run_error]} { puts "MIC_CPU_RUN_RESULT=$run_error" }
 after 1000
 puts "MIC_CPU_STATUS=[state]"

@@ -16,6 +16,7 @@ make_bd_intf_pins_external [get_bd_intf_pins $ps/FIXED_IO]
 set_property name FIXED_IO [get_bd_intf_ports FIXED_IO_0]
 
 set rst [create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0]
+set_property CONFIG.C_AUX_RESET_HIGH {1} $rst
 set reset_inv [create_bd_cell -type module -reference resetn_inverter resetn_inverter_0]
 set gp [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 gp0_control_interconnect]
 set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {1}] $gp
@@ -26,6 +27,7 @@ set_property -dict [list \
     CONFIG.c_include_sg {0} \
     CONFIG.c_include_mm2s {0} \
     CONFIG.c_include_s2mm {1} \
+    CONFIG.c_s_axis_s2mm_tdata_width {32} \
     CONFIG.c_sg_length_width {23} \
     CONFIG.c_include_s2mm_dre {0}] $dma
 set pipeline [create_bd_cell -type module -reference mic_dma_pipeline_ref mic_dma_pipeline_0]
@@ -42,6 +44,10 @@ set ila [create_bd_cell -type ip -vlnv xilinx.com:ip:ila:6.2 ila_0]
 set_property -dict [list CONFIG.C_NUM_OF_PROBES {1} CONFIG.C_PROBE0_WIDTH {256} CONFIG.C_DATA_DEPTH {1024}] $ila
 set irqcat [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 irq_concat]
 set_property CONFIG.NUM_PORTS {1} $irqcat
+set c0 [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 const_zero]
+set_property -dict [list CONFIG.CONST_VAL {0} CONFIG.CONST_WIDTH {1}] $c0
+set c1 [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 const_one]
+set_property -dict [list CONFIG.CONST_VAL {1} CONFIG.CONST_WIDTH {1}] $c1
 
 connect_bd_intf_net [get_bd_intf_pins $ps/M_AXI_GP0] [get_bd_intf_pins $gp/S00_AXI]
 connect_bd_intf_net [get_bd_intf_pins $gp/M00_AXI] [get_bd_intf_pins $dma/S_AXI_LITE]
@@ -71,13 +77,16 @@ foreach pin [list \
 connect_bd_net [get_bd_pins $pipeline/debug_probe] [get_bd_pins $ila/probe0]
 connect_bd_net [get_bd_pins $ps/FCLK_RESET0_N] [get_bd_pins $reset_inv/resetn_i]
 connect_bd_net [get_bd_pins $reset_inv/reset_o] [get_bd_pins $rst/ext_reset_in]
-set resetn [get_bd_pins $rst/peripheral_aresetn]
+connect_bd_net [get_bd_pins $c0/dout] [get_bd_pins $rst/aux_reset_in] [get_bd_pins $rst/mb_debug_sys_rst]
+connect_bd_net [get_bd_pins $c1/dout] [get_bd_pins $rst/dcm_locked]
+set interconnect_resetn [get_bd_pins $rst/interconnect_aresetn]
 foreach pin [list \
     $gp/ARESETN $gp/S00_ARESETN $gp/M00_ARESETN \
-    $hp/ARESETN $hp/S00_ARESETN $hp/M00_ARESETN \
-    $dma/axi_resetn $pipeline/resetn] {
-    connect_bd_net $resetn [get_bd_pins $pin]
+    $hp/ARESETN $hp/S00_ARESETN $hp/M00_ARESETN] {
+    connect_bd_net $interconnect_resetn [get_bd_pins $pin]
 }
+set peripheral_resetn [get_bd_pins $rst/peripheral_aresetn]
+connect_bd_net $peripheral_resetn [get_bd_pins $dma/axi_resetn] [get_bd_pins $pipeline/resetn]
 
 assign_bd_address -offset 0x40400000 -range 64K \
     -target_address_space [get_bd_addr_spaces $ps/Data] \
@@ -86,4 +95,63 @@ assign_bd_address -target_address_space [get_bd_addr_spaces $dma/Data_S2MM] \
     [get_bd_addr_segs $ps/S_AXI_HP0/HP0_DDR_LOWOCM]
 
 validate_bd_design
+
+# Machine assertions copied from the validated M2 DMA/DDR topology.
+foreach {prop expected} {
+    CONFIG.PCW_USE_M_AXI_GP0 1
+    CONFIG.PCW_USE_S_AXI_HP0 1
+    CONFIG.PCW_EN_DDR 1
+    CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ 50.0
+} {
+    set actual [get_property $prop $ps]
+    if {![string equal $actual $expected] && ![string equal $actual "${expected}000000"]} {
+        error "PS7 assertion failed: $prop expected=$expected actual=$actual"
+    }
+}
+foreach {prop expected} {
+    CONFIG.c_include_sg 0
+    CONFIG.c_include_mm2s 0
+    CONFIG.c_include_s2mm 1
+    CONFIG.c_s_axis_s2mm_tdata_width 32
+    CONFIG.c_sg_length_width 23
+    CONFIG.c_include_s2mm_dre 0
+} {
+    set actual [get_property $prop $dma]
+    if {![string equal $actual $expected]} {
+        error "DMA assertion failed: $prop expected=$expected actual=$actual"
+    }
+}
+set dma_map [get_bd_addr_segs -of_objects [get_bd_addr_spaces $ps/Data] -filter {NAME =~ *axi_dma_0*}]
+if {[llength $dma_map] != 1} { error "DMA address segment count expected 1: $dma_map" }
+set dma_offset [get_property OFFSET $dma_map]
+set dma_range [get_property RANGE $dma_map]
+if {$dma_offset ne "0x40400000" || ($dma_range ne "64K" && $dma_range ne "65536" && $dma_range ne "0x00010000")} {
+    error "DMA address assertion failed: offset=$dma_offset range=$dma_range"
+}
+proc assert_one_net {pin label} {
+    set nets [get_bd_nets -of_objects [get_bd_pins $pin]]
+    if {[llength $nets] != 1} { error "$label clock/reset net count expected 1: $nets" }
+}
+foreach {pin label} [list \
+    $ps/FCLK_CLK0 PS_FCLK0 \
+    $ps/M_AXI_GP0_ACLK PS_GP0_ACLK \
+    $ps/S_AXI_HP0_ACLK PS_HP0_ACLK \
+    $dma/s_axi_lite_aclk DMA_AXIL_CLK \
+    $dma/m_axi_s2mm_aclk DMA_S2MM_CLK \
+    $rst/interconnect_aresetn RESET_INTERCONNECT \
+    $rst/peripheral_aresetn RESET_PERIPHERAL \
+    $dma/axi_resetn DMA_RESET \
+    $pipeline/resetn PIPELINE_RESET] { assert_one_net $pin $label }
+foreach {pin label} [list \
+    $ps/M_AXI_GP0 GP0_INTERFACE \
+    $gp/M00_AXI GP0_TO_DMA \
+    $pipeline/M_AXIS PIPELINE_TO_DMA \
+    $dma/M_AXI_S2MM DMA_TO_HP0 \
+    $hp/M00_AXI HP0_TO_PS] {
+    set nets [get_bd_intf_nets -of_objects [get_bd_intf_pins $pin]]
+    if {[llength $nets] != 1} { error "$label interface net count expected 1: $nets" }
+}
+puts "MIC_M2_CLOCK_RESET_ASSERT_PASS"
+puts "MIC_M2_DMA_CONFIG_ASSERT_PASS"
+puts "MIC_M2_ADDRESS_ASSERT_PASS DMA=$dma_offset RANGE=$dma_range"
 save_bd_design
