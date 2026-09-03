@@ -96,3 +96,26 @@ remain intentionally unrecorded.
 3. Confirm the AX7Z020 PS7/DDR/Ethernet preset against the matching vendor project.
 4. Implement CDC/overflow handling and XDC for the confirmed real frontend.
 5. Perform staged board bring-up: clock/reset, GPIO, DMA/DDR, then Ethernet.
+
+## 2026-09-04 overnight final status
+
+The current branch now has a matching `MIC_SOURCE_MODE=1` physical-I2S
+bitstream, HDF, and 100 Mbps lwIP ELF. The I2S conversion is based on the
+standard one-bit I2S delay (`signed(slot[30:7]) >>> 8`) before int16
+saturation. The prior apparent 36.88-second stop was a host capture-window
+artifact compounded by per-datagram sleeps; bounded frame limits and UART
+completion reporting are now explicit.
+
+The physical 100 Mbps path passed the 5-minute smoke and authoritative 1-hour
+retry with exact PCM packet counts, zero CRC/malformed/loss/duplicate/
+out-of-order errors, and complete DMA/UDP counters. Details and artifact hashes
+are in `docs/overnight_bringup_summary.md` and
+`docs/physical_evidence_20260903.md`.
+
+The following markers remain intentionally unrecorded because no controlled
+audible stimulus was used in the overnight run:
+
+`MIC_ACOUSTIC_1KHZ_PHYSICAL_PASS`, `MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS`, and
+`MIC_MATLAB_LIVE_PHYSICAL_PASS`. Run
+`powershell -NoProfile -ExecutionPolicy Bypass -File D:\microphone\scripts\run_morning_acoustic_test.ps1`
+for the remaining user-driven acoustic gate.

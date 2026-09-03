@@ -10,8 +10,10 @@ the existing PCM16LE protocol. The I2S bitstream is selected with
 `MIC_SOURCE_MODE=1`; the default synthetic source remains available for
 offline tests only.
 
-Development targets Vivado and Xilinx SDK 2019.1. No board programming or
-physical hardware access is now staged and remains volatile-only (no QSPI write).
+Development targets Vivado and Xilinx SDK 2019.1. Board programming is
+volatile-only through JTAG (no QSPI/Flash writes). The current stable physical
+artifacts use `MIC_SOURCE_MODE=1`, 100 Mbps full duplex, and conversion
+`signed(slot[30:7]) >>> 8` before int16 saturation.
 
 Bring-up commands:
 
@@ -21,8 +23,8 @@ E:\vivado\SDK\2019.1\bin\xsct.bat scripts\program_physical_mic.xsct
 scripts\capture_uart.ps1 -Port COM4
 matlab -batch "cd('D:/microphone'); addpath('matlab'); live_mic_receiver('LocalPort',45123)"
 
-# Automated acoustic capture (MATLAB ready marker, XSCT download, and analysis)
-powershell -ExecutionPolicy Bypass -File scripts\run_acoustic_acceptance.ps1
+# One-command morning acoustic capture (MATLAB first, then JTAG download)
+powershell -NoProfile -ExecutionPolicy Bypass -File D:\microphone\scripts\run_morning_acoustic_test.ps1
 ```
 
 The stable physical link uses 100 Mbps full duplex: board `192.168.1.10/24`
@@ -61,3 +63,13 @@ matlab -batch "cd('D:/microphone'); addpath('matlab'); run_all_tests"
 See `docs/CURRENT_STATUS.md` before interpreting any PASS token. Offline DMA
 build success is not evidence of physical DDR, Ethernet, GPIO, or microphone
 operation.
+
+## Stability evidence
+
+`scripts/run_overnight_soak.ps1` starts the rolling Python receiver before
+volatile JTAG programming, captures UART, and records adapter counter deltas.
+It validates every MIC0 datagram while retaining only first/middle/last
+10-second windows and minute statistics. The 5-minute smoke and 1-hour soak
+evidence are stored under
+`evidence/physical/overnight_final_20260904/`; quiet-environment data does not
+constitute an acoustic PASS.
