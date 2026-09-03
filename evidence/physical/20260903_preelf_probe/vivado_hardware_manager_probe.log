@@ -1,0 +1,7 @@
+MIC_VIVADO_EXECUTABLE=E:/vivado/Vivado/2019.1/bin/unwrapped/win64.o/vivado.exe
+MIC_VIVADO_VERSION=Vivado v2019.1 (64-bit)
+MIC_OPEN_HW_MANAGER_COMMANDS_AFTER_LOAD=
+MIC_JTAG_PROBE_FAIL hardware-manager-feature-unavailable
+
+The same result was observed in Vivado -mode batch and -mode tcl. No
+vivado_lab, xsim, or SDK Tcl shell was used.

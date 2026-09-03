@@ -1,6 +1,10 @@
 # Read-only Vivado Hardware Manager probe for AX7Z020 bring-up.
+puts "MIC_VIVADO_EXECUTABLE=[info nameofexecutable]"
+puts "MIC_VIVADO_VERSION=[version]"
+puts "MIC_OPEN_HW_MANAGER_COMMANDS=[info commands open_hw_manager]"
 catch {load_features hw_manager}
 catch {load_features labtools}
+puts "MIC_OPEN_HW_MANAGER_COMMANDS_AFTER_LOAD=[info commands open_hw_manager]"
 if {[llength [info commands open_hw_manager]] == 0} {
     puts "MIC_JTAG_PROBE_FAIL hardware-manager-feature-unavailable"
     exit 4

@@ -6,15 +6,35 @@ foreach var {MIC_BITFILE MIC_INIT_TCL MIC_ELF} {
 set bitfile [file normalize $::env(MIC_BITFILE)]
 set init_tcl [file normalize $::env(MIC_INIT_TCL)]
 set elf [file normalize $::env(MIC_ELF)]
+
+# Keep each probe as a separate DAP transaction.  The register names and
+# addresses are taken from the generated ps7_init.tcl and Zynq-7000 SLCR map:
+# FPGA0_CLK_CTRL (0xF8000170), PLL_STATUS (0xF800010C),
+# PSS_RST_CTRL (0xF8000200), FPGA_RST_CTRL (0xF8000240).
+proc mic_probe_mrd {label address {dma_probe 0}} {
+    puts "MIC_PRE_ELF_READ_BEGIN $label ADDRESS=$address"
+    # -force is required for PL AXI addresses not present in XSCT's default
+    # PS memory map; it still performs a real DAP read on the target.
+    if {[catch {set value [mrd -force $address]} err]} {
+        puts "MIC_PRE_ELF_READ_ERROR $label ERROR=$err"
+        if {$dma_probe} {
+            puts "MIC_DMA_AXIL_PRE_ELF_READ_HANG"
+            error "DMA AXI-Lite pre-ELF probe failed at $address"
+        }
+        return
+    }
+    puts "MIC_PRE_ELF_READ_RESULT $label VALUE=$value"
+}
+
 connect
 puts "MIC_JTAG_TARGETS_BEGIN"
 puts [targets]
-targets -set -nocase -filter {name =~ "APU"}
-if {[catch {rst -system} system_reset_error]} { puts "MIC_SYSTEM_RESET_RESULT=$system_reset_error" }
-after 500
 targets -set -nocase -filter {name =~ "xc7z020"}
 fpga -file $bitfile
 puts "MIC_BITSTREAM_VOLATILE_PROGRAM_PASS"
+after 500
+targets -set -nocase -filter {name =~ "APU"}
+if {[catch {rst -system} system_reset_error]} { puts "MIC_SYSTEM_RESET_RESULT=$system_reset_error" }
 after 500
 targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
 if {[catch {stop} stop_error]} { puts "MIC_CPU_PREINIT_STOP_RESULT=$stop_error" }
@@ -27,6 +47,19 @@ puts [targets]
 targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
 if {[catch {rst -processor} reset_error]} { puts "MIC_CPU_RESET_RESULT=$reset_error" }
 after 500
+
+# CPU is stopped here: prove the GP0-to-DMA path before loading or running ELF.
+puts "MIC_PRE_ELF_MMIO_PROBE_BEGIN"
+mic_probe_mrd SLCR_FPGA0_CLK_CTRL 0xF8000170
+mic_probe_mrd SLCR_PLL_STATUS 0xF800010C
+mic_probe_mrd SLCR_PSS_RST_CTRL 0xF8000200
+mic_probe_mrd SLCR_FPGA_RST_CTRL 0xF8000240
+mic_probe_mrd GPIO_DIAGNOSTIC_DATA 0x41200000
+mic_probe_mrd DMA_S2MM_DMACR 0x40400030 1
+mic_probe_mrd DMA_S2MM_DMASR 0x40400034 1
+mic_probe_mrd DDR_KNOWN_SAFE 0x00100000
+puts "MIC_PRE_ELF_MMIO_PROBE_END"
+
 dow $elf
 puts "MIC_ELF_DOWNLOAD_PASS"
 after 2000

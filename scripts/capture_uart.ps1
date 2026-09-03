@@ -24,6 +24,11 @@ try {
 } finally {
     $serial.Close()
 }
-$builder.ToString() | Set-Content -Encoding utf8 $Output
+$captured = $builder.ToString()
+if ($captured.Length -eq 0) {
+    [IO.File]::WriteAllText($Output, "")
+} else {
+    [IO.File]::WriteAllText($Output, $captured)
+}
 Write-Output ("MIC_UART_CAPTURE path={0} bytes={1}" -f $Output, $builder.Length)
-if ($builder.Length -gt 0) { $builder.ToString() }
+if ($builder.Length -gt 0) { $captured }

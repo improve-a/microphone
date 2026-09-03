@@ -1,0 +1,11 @@
+Command:
+  arm-none-eabi-addr2line -e sw/build/physical_mic_clean_20260902/mic_dma_app/Debug/mic_dma_app.elf -f -C 0x00101384
+  arm-none-eabi-objdump -d -S --start-address=0x00101370 --stop-address=0x001013e8 sw/build/physical_mic_clean_20260902/mic_dma_app/Debug/mic_dma_app.elf
+
+Result:
+  0x00101384 -> XAxiDma_Reset, xaxidma.c:348
+  0x00101384: e5903008  ldr r3, [r0, #8]  ; InstancePtr->HasS2Mm
+  0x001013d4: e5832030  str r2, [r3, #48] ; RegBase + 0x30 = 0x40400030
+
+MIC_DMA_FAULT_PC_INSTRUCTION=LDR r3,[r0,#8] (not MMIO)
+MIC_DMA_FAULT_ACCESS_ADDRESS=0x40400030 (S2MM_DMACR reset write)

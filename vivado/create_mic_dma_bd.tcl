@@ -19,7 +19,7 @@ set rst [create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys
 set_property CONFIG.C_AUX_RESET_HIGH {1} $rst
 set reset_inv [create_bd_cell -type module -reference resetn_inverter resetn_inverter_0]
 set gp [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 gp0_control_interconnect]
-set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {1}] $gp
+set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {2}] $gp
 set hp [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 hp0_memory_interconnect]
 set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {1}] $hp
 set dma [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_0]
@@ -48,9 +48,12 @@ set c0 [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 const_zero]
 set_property -dict [list CONFIG.CONST_VAL {0} CONFIG.CONST_WIDTH {1}] $c0
 set c1 [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 const_one]
 set_property -dict [list CONFIG.CONST_VAL {1} CONFIG.CONST_WIDTH {1}] $c1
+set gpio_diag [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_diag]
+set_property -dict [list CONFIG.C_GPIO_WIDTH {1} CONFIG.C_ALL_INPUTS {1}] $gpio_diag
 
 connect_bd_intf_net [get_bd_intf_pins $ps/M_AXI_GP0] [get_bd_intf_pins $gp/S00_AXI]
 connect_bd_intf_net [get_bd_intf_pins $gp/M00_AXI] [get_bd_intf_pins $dma/S_AXI_LITE]
+connect_bd_intf_net [get_bd_intf_pins $gp/M01_AXI] [get_bd_intf_pins $gpio_diag/S_AXI]
 connect_bd_intf_net [get_bd_intf_pins $pipeline/M_AXIS] [get_bd_intf_pins $dma/S_AXIS_S2MM]
 connect_bd_intf_net [get_bd_intf_pins $dma/M_AXI_S2MM] [get_bd_intf_pins $hp/S00_AXI]
 connect_bd_intf_net [get_bd_intf_pins $hp/M00_AXI] [get_bd_intf_pins $ps/S_AXI_HP0]
@@ -68,7 +71,7 @@ foreach {pin name} [list \
 set fclk [get_bd_pins $ps/FCLK_CLK0]
 foreach pin [list \
     $ps/M_AXI_GP0_ACLK $ps/S_AXI_HP0_ACLK \
-    $gp/ACLK $gp/S00_ACLK $gp/M00_ACLK \
+    $gp/ACLK $gp/S00_ACLK $gp/M00_ACLK $gp/M01_ACLK \
     $hp/ACLK $hp/S00_ACLK $hp/M00_ACLK \
     $dma/s_axi_lite_aclk $dma/m_axi_s2mm_aclk \
     $pipeline/clk $ila/clk $rst/slowest_sync_clk] {
@@ -79,18 +82,24 @@ connect_bd_net [get_bd_pins $ps/FCLK_RESET0_N] [get_bd_pins $reset_inv/resetn_i]
 connect_bd_net [get_bd_pins $reset_inv/reset_o] [get_bd_pins $rst/ext_reset_in]
 connect_bd_net [get_bd_pins $c0/dout] [get_bd_pins $rst/aux_reset_in] [get_bd_pins $rst/mb_debug_sys_rst]
 connect_bd_net [get_bd_pins $c1/dout] [get_bd_pins $rst/dcm_locked]
+connect_bd_net [get_bd_pins $c0/dout] [get_bd_pins $gpio_diag/gpio_io_i]
 set interconnect_resetn [get_bd_pins $rst/interconnect_aresetn]
 foreach pin [list \
-    $gp/ARESETN $gp/S00_ARESETN $gp/M00_ARESETN \
+    $gp/ARESETN $gp/S00_ARESETN $gp/M00_ARESETN $gp/M01_ARESETN \
     $hp/ARESETN $hp/S00_ARESETN $hp/M00_ARESETN] {
     connect_bd_net $interconnect_resetn [get_bd_pins $pin]
 }
 set peripheral_resetn [get_bd_pins $rst/peripheral_aresetn]
 connect_bd_net $peripheral_resetn [get_bd_pins $dma/axi_resetn] [get_bd_pins $pipeline/resetn]
+connect_bd_net $fclk [get_bd_pins $gpio_diag/s_axi_aclk]
+connect_bd_net $interconnect_resetn [get_bd_pins $gpio_diag/s_axi_aresetn]
 
 assign_bd_address -offset 0x40400000 -range 64K \
     -target_address_space [get_bd_addr_spaces $ps/Data] \
     [get_bd_addr_segs $dma/S_AXI_LITE/Reg]
+assign_bd_address -offset 0x41200000 -range 4K \
+    -target_address_space [get_bd_addr_spaces $ps/Data] \
+    [get_bd_addr_segs $gpio_diag/S_AXI/Reg]
 assign_bd_address -target_address_space [get_bd_addr_spaces $dma/Data_S2MM] \
     [get_bd_addr_segs $ps/S_AXI_HP0/HP0_DDR_LOWOCM]
 
