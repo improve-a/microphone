@@ -27,10 +27,12 @@
 #define REAR_GUARD  0x2468ACE0U
 #define POISON      0xDEADBEEFU
 #define WAIT_LIMIT  40000000U
-/* Keep the board streaming long enough for a human acoustic action after the
- * host receiver has confirmed readiness.  At 128 samples/frame this is just
- * over one minute on the validated 48.828 kHz capture path. */
+/* The default is a short bounded run.  Long stability builds inject a larger
+ * value through the SDK compiler flags; the value remains explicit in the
+ * ELF build record and is printed by the completion marker. */
+#ifndef MIC_MAX_FRAMES
 #define MIC_MAX_FRAMES 24576U
+#endif
 #define MIC_UDP_PORT 45123U
 #define MIC_GEM_BASE XPAR_XEMACPS_0_BASEADDR
 #define MIC_PHY_ADDR 3U
@@ -62,6 +64,12 @@ static uint32_t packet_sequence;
 static uint32_t send_trace_count;
 static uint32_t input_calls;
 static uint32_t input_packets;
+static uint32_t dma_submissions;
+static uint32_t dma_completions;
+static uint32_t dma_timeouts;
+static uint32_t dma_errors;
+static uint32_t udp_successes;
+static uint32_t udp_failures;
 static void service_network(void);
 static int send_raw_broadcast(void);
 
@@ -270,7 +278,7 @@ static int send_bytes(const uint8_t *bytes, uint16_t length)
 {
     struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, length, PBUF_RAM);
     err_t error;
-    if (p == NULL) return 0;
+    if (p == NULL) { udp_failures++; return 0; }
     memcpy(p->payload, bytes, length);
     if (send_trace_count < 3U) gem_tx_diag("UDP_BEFORE");
     error = udp_sendto(mic_udp, p, &host_ip, MIC_UDP_PORT);
@@ -281,6 +289,7 @@ static int send_bytes(const uint8_t *bytes, uint16_t length)
         if (send_trace_count < 3U) gem_tx_diag("UDP_AFTER");
     }
     send_trace_count++;
+    if (error == ERR_OK) udp_successes++; else udp_failures++;
     return error == ERR_OK;
 }
 
@@ -489,7 +498,9 @@ int main(void)
     xil_printf("MIC_DMA_SW_BOOT\r\n");
     xil_printf("MIC_SW_ENTRY\r\n");
     xil_printf("MIC_UART_READY\r\n");
-    xil_printf("MIC_SOURCE=PHYSICAL_I2S_BCK_HZ=3125000_WS_HZ=48828\r\n");
+    xil_printf("MIC_SOURCE=PHYSICAL_I2S\r\n");
+    xil_printf("MIC_SOURCE=PHYSICAL_I2S_BCK_HZ=3125000_WS_HZ=48828 SLOT_BITS=32 VALID_BITS=24 PCM_RIGHT_SHIFT=8\r\n");
+    xil_printf("MIC_MAX_FRAMES=%u\r\n", (unsigned)MIC_MAX_FRAMES);
     init_platform();
     if (!network_init()) return XST_FAILURE;
     gem_tx_diag("POST_INIT");
@@ -560,20 +571,25 @@ int main(void)
         prepare_slot(slot);
         if (XAxiDma_SimpleTransfer(&dma, (UINTPTR)slot->payload,
                 MIC_FRAME_BYTES, XAXIDMA_DEVICE_TO_DMA) != XST_SUCCESS) {
+            dma_errors++;
             xil_printf("MIC_DMA_CAPTURE_FAIL frame=%lu\r\n", (unsigned long)frame);
             return XST_FAILURE;
         }
+        dma_submissions++;
         for (timeout = 0; timeout < WAIT_LIMIT &&
              XAxiDma_Busy(&dma, XAXIDMA_DEVICE_TO_DMA); ++timeout) {
             service_network();
         }
         status = XAxiDma_ReadReg(dma.RegBase, XAXIDMA_RX_OFFSET + XAXIDMA_SR_OFFSET);
         if (timeout == WAIT_LIMIT || (status & XAXIDMA_ERR_ALL_MASK) != 0U) {
+            if (timeout == WAIT_LIMIT) dma_timeouts++;
+            if ((status & XAXIDMA_ERR_ALL_MASK) != 0U) dma_errors++;
             (void)recover_dma();
             xil_printf("MIC_DMA_CAPTURE_FAIL frame=%lu status=0x%08x\r\n",
                 (unsigned long)frame, (unsigned)status);
             return XST_FAILURE;
         }
+        dma_completions++;
         if (!verify_slot(slot)) {
             xil_printf("MIC_DMA_GUARD_FAIL frame=%lu\r\n", (unsigned long)frame);
             return XST_FAILURE;
@@ -594,9 +610,6 @@ int main(void)
                     (unsigned long)frame, (unsigned long)part);
                 return XST_FAILURE;
             }
-            /* Keep the host-side bounded receiver below its Windows UDP
-             * socket burst limit while preserving the wire protocol. */
-            usleep(1000U);
         }
         if ((frame % 256U) == 0U) {
             xil_printf("MIC_UDP_PCM_SENT frame=%lu seq=%lu\r\n",
@@ -605,6 +618,11 @@ int main(void)
         service_network();
     }
     xil_printf("MIC_UDP_BOUNDED_COMPLETE frames=%u\r\n", MIC_MAX_FRAMES);
+    xil_printf("MIC_CONTINUOUS_STATS DMA_SUBMISSIONS=%u DMA_COMPLETIONS=%u DMA_TIMEOUTS=%u DMA_ERRORS=%u UDP_OK=%u UDP_FAIL=%u INPUT_CALLS=%u INPUT_PACKETS=%u\r\n",
+        (unsigned)dma_submissions, (unsigned)dma_completions,
+        (unsigned)dma_timeouts, (unsigned)dma_errors,
+        (unsigned)udp_successes, (unsigned)udp_failures,
+        (unsigned)input_calls, (unsigned)input_packets);
     print_capture_stats(&slots[0]);
     cleanup_platform();
     return XST_SUCCESS;

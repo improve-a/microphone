@@ -4,6 +4,7 @@ module mic_dma_pipeline #(
     parameter integer CHANNELS = 8,
     parameter integer SAMPLES_PER_FRAME = 128,
     parameter integer SOURCE_MODE = 0,
+    parameter integer PCM_RIGHT_SHIFT = 8,
     parameter [31:0] SOURCE_SEED = 32'h13579BDF
 ) (
     (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME clk, ASSOCIATED_BUSIF M_AXIS, ASSOCIATED_RESET resetn" *)
@@ -54,7 +55,8 @@ module mic_dma_pipeline #(
 
     lc_ai_k210_7mic_frontend #(
         .SAMPLES_PER_FRAME(SAMPLES_PER_FRAME),
-        .BCK_HALF_DIV(8)
+        .BCK_HALF_DIV(8),
+        .PCM_RIGHT_SHIFT(PCM_RIGHT_SHIFT)
     ) real_source (
         .clk(clk), .resetn(resetn),
         .mic_d0(mic_d0), .mic_d1(mic_d1), .mic_d2(mic_d2), .mic_d3(mic_d3),

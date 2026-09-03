@@ -6,8 +6,16 @@ if {[info exists ::env(MIC_VIVADO_BUILD_LEAF)] && $::env(MIC_VIVADO_BUILD_LEAF) 
 }
 set build_dir [file join $script_dir build $build_leaf]
 set report_dir [file join $repo_dir reports generated]
+if {[info exists ::env(MIC_REPORT_DIR)] && $::env(MIC_REPORT_DIR) ne ""} {
+    set report_dir [file normalize $::env(MIC_REPORT_DIR)]
+}
 file mkdir $build_dir
 file mkdir $report_dir
+
+if {![info exists ::env(MIC_SOURCE_MODE)] || $::env(MIC_SOURCE_MODE) ne "1"} {
+    error "MIC_SOURCE_MODE=1 is required for the physical microphone build"
+}
+puts "MIC_SOURCE_MODE_ASSERT=1"
 
 create_project -force mic_dma $build_dir -part xc7z020clg400-2
 set_property target_language Verilog [current_project]

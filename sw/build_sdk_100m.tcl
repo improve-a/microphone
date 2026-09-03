@@ -1,6 +1,10 @@
 set script_dir [file dirname [file normalize [info script]]]
 set repo_dir [file dirname $script_dir]
-set hdf [file join $repo_dir reports generated mic_dma.hdf]
+if {[info exists ::env(MIC_HDF)] && $::env(MIC_HDF) ne ""} {
+    set hdf [file normalize $::env(MIC_HDF)]
+} else {
+    set hdf [file join $repo_dir reports generated mic_dma.hdf]
+}
 if {[info exists ::env(MIC_SDK_WORKSPACE)]} {
     set workspace [file normalize $::env(MIC_SDK_WORKSPACE)]
 } else {
@@ -26,6 +30,13 @@ if {[string first "ETHARP_SUPPORT_STATIC_ENTRIES" $lwipopts_text] < 0} {
 createapp -name mic_dma_app -hwproject mic_dma_hw -bsp mic_dma_bsp \
     -proc ps7_cortexa9_0 -os standalone -lang C -app {Empty Application}
 configapp -app mic_dma_app -add linker-misc {-Wl,--defsym,_HEAP_SIZE=0x200000}
+if {[info exists ::env(MIC_MAX_FRAMES)] && $::env(MIC_MAX_FRAMES) ne ""} {
+    if {![string is integer -strict $::env(MIC_MAX_FRAMES)] || $::env(MIC_MAX_FRAMES) <= 0} {
+        error "MIC_MAX_FRAMES must be a positive integer"
+    }
+    configapp -app mic_dma_app -add compiler-misc "-DMIC_MAX_FRAMES=$::env(MIC_MAX_FRAMES)U"
+    puts "MIC_MAX_FRAMES_ASSERT=$::env(MIC_MAX_FRAMES)"
+}
 importsources -name mic_dma_app -path [file join $script_dir src]
 importsources -name mic_dma_app -path [file join $script_dir include]
 projects -build

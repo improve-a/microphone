@@ -39,6 +39,7 @@ set_property -dict [list \
     CONFIG.CHANNELS {8} \
     CONFIG.SAMPLES_PER_FRAME {128} \
     CONFIG.SOURCE_MODE $source_mode \
+    CONFIG.PCM_RIGHT_SHIFT {8} \
     CONFIG.SOURCE_SEED {0x13579BDF}] $pipeline
 set ila [create_bd_cell -type ip -vlnv xilinx.com:ip:ila:6.2 ila_0]
 set_property -dict [list CONFIG.C_NUM_OF_PROBES {1} CONFIG.C_PROBE0_WIDTH {256} CONFIG.C_DATA_DEPTH {1024}] $ila

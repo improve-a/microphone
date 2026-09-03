@@ -2,11 +2,12 @@
 
 // Physical LC-AI-K210-7Mic I2S receiver.
 // The initial AX7Z020 clock plan uses FCLK0=50 MHz, BCK=50 MHz/16=3.125 MHz
-// and WS=BCK/64=48.828125 kHz. PCM16 uses the upper 16 bits of each 32-bit
-// slot until an ILA capture confirms the module's exact valid-bit alignment.
+// and WS=BCK/64=48.828125 kHz. The microphones use an I2S one-bit delay:
+// after WS changes, the 24-bit signed sample occupies slot[30:7].
 module lc_ai_k210_7mic_frontend #(
     parameter integer SAMPLES_PER_FRAME = 128,
     parameter integer BCK_HALF_DIV      = 8,
+    parameter integer PCM_RIGHT_SHIFT   = 8,
     parameter integer SAMPLE_INDEX_W    = (SAMPLES_PER_FRAME <= 1) ? 1 : $clog2(SAMPLES_PER_FRAME)
 ) (
     input  wire                         clk,
@@ -60,6 +61,24 @@ module lc_ai_k210_7mic_frontend #(
     assign sample_index_o = pending_sample_index;
     assign frame_index_o = pending_frame_index;
 
+    // Convert the delayed-I2S 24-bit two's-complement sample to PCM16.
+    // Keeping this as an arithmetic shift before saturation preserves the
+    // sign bit and makes the intended 24-bit-to-16-bit scale explicit.
+    function automatic signed [15:0] pcm16_from_slot(input [31:0] slot);
+        reg signed [23:0] raw24;
+        reg signed [31:0] scaled;
+        begin
+            raw24 = $signed(slot[30:7]);
+            scaled = raw24 >>> PCM_RIGHT_SHIFT;
+            if (scaled > 32'sd32767)
+                pcm16_from_slot = 16'sh7fff;
+            else if (scaled < -32'sd32768)
+                pcm16_from_slot = 16'sh8000;
+            else
+                pcm16_from_slot = scaled[15:0];
+        end
+    endfunction
+
     always @* begin
         case (out_channel)
             3'd0: pcm_data_o = frame_ch0;
@@ -75,26 +94,24 @@ module lc_ai_k210_7mic_frontend #(
 
     always @* begin
         debug_probe_o = 256'd0;
-        debug_probe_o[0] = bck_reg;
-        debug_probe_o[1] = ws_reg;
-        debug_probe_o[2] = d0_sync;
-        debug_probe_o[3] = d1_sync;
-        debug_probe_o[4] = d2_sync;
-        debug_probe_o[5] = d3_sync;
-        debug_probe_o[6] = frame_sync_pulse;
-        debug_probe_o[7] = error_flag;
-        debug_probe_o[13:8] = bit_in_slot;
-        debug_probe_o[14] = ws_reg;
-        debug_probe_o[15] = frame_ready;
-        debug_probe_o[16] = out_active;
-        debug_probe_o[48:17] = shift0;
-        debug_probe_o[80:49] = shift1;
-        debug_probe_o[112:81] = shift2;
-        debug_probe_o[144:113] = shift3;
-        debug_probe_o[176:145] = frame_index;
-        debug_probe_o[208:177] = sample_index;
-        debug_probe_o[215:208] = {5'd0, out_channel};
-        debug_probe_o[247:216] = error_count;
+        // Seven complete raw slots are retained for ILA/offline alignment
+        // analysis. The final 32 bits carry timing/state metadata.
+        debug_probe_o[31:0] = left0;
+        debug_probe_o[63:32] = right0;
+        debug_probe_o[95:64] = left1;
+        debug_probe_o[127:96] = right1;
+        debug_probe_o[159:128] = left2;
+        debug_probe_o[191:160] = right2;
+        debug_probe_o[223:192] = right3;
+        debug_probe_o[224] = bck_reg;
+        debug_probe_o[225] = ws_reg;
+        debug_probe_o[229:226] = {d3_sync, d2_sync, d1_sync, d0_sync};
+        debug_probe_o[230] = frame_sync_pulse;
+        debug_probe_o[231] = error_flag;
+        debug_probe_o[237:232] = bit_in_slot;
+        debug_probe_o[238] = frame_ready;
+        debug_probe_o[239] = out_active;
+        debug_probe_o[255:240] = frame_index[15:0];
     end
 
     // The module data outputs are synchronous to SCK. Two flip-flops keep the
@@ -197,13 +214,13 @@ module lc_ai_k210_7mic_frontend #(
                             end else begin
                                 // D3 left is the documented empty slot; ch7 is
                                 // deliberately driven to zero, never stale data.
-                                frame_ch0 <= $signed(left0[31:16]);
-                                frame_ch1 <= $signed(right0[31:16]);
-                                frame_ch2 <= $signed(left1[31:16]);
-                                frame_ch3 <= $signed(right1[31:16]);
-                                frame_ch4 <= $signed(left2[31:16]);
-                                frame_ch5 <= $signed(right2[31:16]);
-                                frame_ch6 <= $signed(right3[31:16]);
+                                frame_ch0 <= pcm16_from_slot(left0);
+                                frame_ch1 <= pcm16_from_slot(right0);
+                                frame_ch2 <= pcm16_from_slot(left1);
+                                frame_ch3 <= pcm16_from_slot(right1);
+                                frame_ch4 <= pcm16_from_slot(left2);
+                                frame_ch5 <= pcm16_from_slot(right2);
+                                frame_ch6 <= pcm16_from_slot(right3);
                                 frame_ch7 <= 16'sd0;
                                 pending_sample_index <= sample_index;
                                 pending_frame_index <= frame_index;
