@@ -13,10 +13,19 @@ download.
 Operator observation:
 
 ```text
-LED1: pending
-LED2: pending
-LED3: pending
-LED4: pending
+LED1: blinking
+LED2: on
+LED3: on
+LED4: on
+```
+
+The operator reported this state after a full PC and board power cycle while
+the `mic_dma_runtime_probe_resetfix_20260903` bitstream was loaded. This is
+physical evidence that FCLK0 is running and `FCLK_RESET0_N`,
+`interconnect_aresetn`, and `peripheral_aresetn` are all deasserted.
+
+```text
+MIC_PS_RESET_PHYSICAL_PASS
 ```
 
 Mapping: LED1/J14 is the FCLK heartbeat; LED2/K14 is
