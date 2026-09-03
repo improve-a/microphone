@@ -23,6 +23,16 @@ The Windows adapter counter delta for the bounded run was `ReceivedBytes`
 `+9,177,040`, `ReceivedUnicastPackets` `+12,318`, and zero discarded packets
 or packet errors. `arp -a` learned `192.168.1.10 -> 00-0a-35-00-01-02`.
 
+Physical acceptance markers, recorded only after the real captures above:
+
+```
+MIC_ETHERNET_L2_100M_PHYSICAL_PASS
+MIC_ARP_PHYSICAL_PASS
+MIC_UDP_HEARTBEAT_PHYSICAL_PASS
+MIC_UDP_PCM_PHYSICAL_PASS
+MIC_MATLAB_LIVE_PHYSICAL_PASS
+```
+
 The temporary firewall rule could not be created without elevation; the exact
 administrator command is recorded in the task log. No Vivado rebuild, Flash
 write, or DMA/PL modification was used.
