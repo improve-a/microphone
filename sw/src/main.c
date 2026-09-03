@@ -13,6 +13,7 @@
 #include "netif/xadapter.h"
 #include "platform.h"
 #include "platform_config.h"
+#include "sleep.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -87,10 +88,10 @@ static int network_init(void)
 {
     ip_addr_t ipaddr, netmask, gateway;
     unsigned char mac[] = { 0x00, 0x0A, 0x35, 0x00, 0x01, 0x02 };
-    IP4_ADDR(&ipaddr, 169, 254, 248, 10);
-    IP4_ADDR(&netmask, 255, 255, 0, 0);
-    IP4_ADDR(&gateway, 0, 0, 0, 0);
-    IP4_ADDR(&host_ip, 169, 254, 248, 53);
+    IP4_ADDR(&ipaddr, 192, 168, 1, 10);
+    IP4_ADDR(&netmask, 255, 255, 255, 0);
+    IP4_ADDR(&gateway, 192, 168, 1, 1);
+    IP4_ADDR(&host_ip, 192, 168, 1, 2);
     lwip_init();
     if (!xemac_add(echo_netif, &ipaddr, &netmask, &gateway, mac,
                    PLATFORM_EMAC_BASEADDR)) {
@@ -106,7 +107,7 @@ static int network_init(void)
         xil_printf("MIC_UDP_PCB_FAIL\r\n");
         return 0;
     }
-    xil_printf("MIC_GEM0_IP=169.254.248.10 HOST=169.254.248.53 PORT=45123\r\n");
+    xil_printf("MIC_GEM0_IP=192.168.1.10 HOST=192.168.1.2 PORT=45123\r\n");
     xil_printf("MIC_LWIP_GEM0_READY\r\n");
     return 1;
 }
@@ -169,6 +170,11 @@ int main(void)
     if (!network_init()) return XST_FAILURE;
     if (!send_heartbeat()) return XST_FAILURE;
     xil_printf("MIC_UDP_HEARTBEAT_SENT\r\n");
+    /* Allow the first ARP exchange to complete before the bounded PCM burst. */
+    for (uint32_t warmup = 0; warmup < 2000U; ++warmup) {
+        service_network();
+        usleep(1000U);
+    }
     if (!mic_layout_slots(XPAR_PS7_DDR_0_S_AXI_BASEADDR,
             XPAR_PS7_DDR_0_S_AXI_HIGHADDR, slots)) return XST_FAILURE;
     xil_printf("MIC_BEFORE_DMA_LOOKUP\r\n");

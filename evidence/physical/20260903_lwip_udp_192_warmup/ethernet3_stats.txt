@@ -1,0 +1,5 @@
+
+Name                             ReceivedBytes ReceivedUnicastPackets       SentBytes SentUnicastPackets
+----                             ------------- ----------------------       --------- ------------------
+以太网 3                                     0                      0          579104                  0
+
