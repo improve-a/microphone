@@ -20,7 +20,14 @@ Bring-up commands:
 E:\vivado\Vivado\2019.1\bin\vivado.bat -mode batch -source vivado\build_mic_dma.tcl
 E:\vivado\SDK\2019.1\bin\xsct.bat scripts\program_physical_mic.xsct
 scripts\capture_uart.ps1 -Port COM4
-matlab -batch "cd('D:/microphone'); addpath('matlab'); live_mic_receiver('LocalPort',5000)"
+matlab -batch "cd('D:/microphone'); addpath('matlab'); live_mic_receiver('LocalPort',45123)"
+```
+
+The current direct-link defaults use the Windows adapter's observed
+`169.254.248.53/16` address. Start the receiver before programming the board:
+
+```powershell
+D:\python3.12.3\python.exe scripts\udp_capture.py --seconds 14 --output evidence/physical/udp_capture
 ```
 
 ## Offline regression

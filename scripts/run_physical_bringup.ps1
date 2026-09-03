@@ -11,11 +11,11 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $build = Join-Path $repo "vivado\build\mic_dma_runtime_probe_resetfix_20260903"
-$sdk = Join-Path $repo "sw\build\physical_mic_diag_20260903"
+$sdk = Join-Path $repo "sw\build\sdk_workspace"
 if ([string]::IsNullOrWhiteSpace($Bitfile)) { $Bitfile = Join-Path $build "mic_dma.runs\impl_1\mic_dma_system_wrapper.bit" }
 if ([string]::IsNullOrWhiteSpace($InitTcl)) { $InitTcl = Join-Path $sdk "mic_dma_hw\ps7_init.tcl" }
 if ([string]::IsNullOrWhiteSpace($Elf)) { $Elf = Join-Path $sdk "mic_dma_app\Debug\mic_dma_app.elf" }
-if ([string]::IsNullOrWhiteSpace($EvidenceDir)) { $EvidenceDir = Join-Path $repo "evidence\physical\20260903_runtime_probe_resetfix" }
+if ([string]::IsNullOrWhiteSpace($EvidenceDir)) { $EvidenceDir = Join-Path $repo "evidence\physical\lwip_udp" }
 New-Item -ItemType Directory -Force -Path $EvidenceDir | Out-Null
 
 foreach ($path in @($Bitfile, $InitTcl)) {
