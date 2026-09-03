@@ -5,6 +5,7 @@ param(
     [string]$EvidenceDir = "",
     [string]$Port = "COM4",
     [int]$UartSeconds = 15
+    ,[switch]$ObserveOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,9 +18,10 @@ if ([string]::IsNullOrWhiteSpace($Elf)) { $Elf = Join-Path $sdk "mic_dma_app\Deb
 if ([string]::IsNullOrWhiteSpace($EvidenceDir)) { $EvidenceDir = Join-Path $repo "evidence\physical\20260903_preelf_probe" }
 New-Item -ItemType Directory -Force -Path $EvidenceDir | Out-Null
 
-foreach ($path in @($Bitfile, $InitTcl, $Elf)) {
+foreach ($path in @($Bitfile, $InitTcl)) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Missing artifact: $path" }
 }
+if (-not $ObserveOnly -and -not (Test-Path -LiteralPath $Elf)) { throw "Missing artifact: $Elf" }
 
 $uartLog = Join-Path $EvidenceDir "uart.log"
 $xsctLog = Join-Path $EvidenceDir "xsct.log"
@@ -32,6 +34,7 @@ try {
     $env:MIC_BITFILE = [IO.Path]::GetFullPath($Bitfile)
     $env:MIC_INIT_TCL = [IO.Path]::GetFullPath($InitTcl)
     $env:MIC_ELF = [IO.Path]::GetFullPath($Elf)
+    if ($ObserveOnly) { $env:MIC_OBSERVE_ONLY = "1" } else { Remove-Item Env:MIC_OBSERVE_ONLY -ErrorAction SilentlyContinue }
     $xsct = "E:\vivado\SDK\2019.1\bin\xsct.bat"
     if (-not (Test-Path -LiteralPath $xsct)) { throw "XSCT executable missing: $xsct" }
     & $xsct (Join-Path $PSScriptRoot "program_physical_mic.xsct") 2>&1 | Tee-Object -FilePath $xsctLog

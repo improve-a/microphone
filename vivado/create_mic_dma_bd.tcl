@@ -50,6 +50,7 @@ set c1 [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 const_one]
 set_property -dict [list CONFIG.CONST_VAL {1} CONFIG.CONST_WIDTH {1}] $c1
 set gpio_diag [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_diag]
 set_property -dict [list CONFIG.C_GPIO_WIDTH {1} CONFIG.C_ALL_INPUTS {1}] $gpio_diag
+set runtime_probe [create_bd_cell -type module -reference pl_runtime_probe_ref pl_runtime_probe_0]
 
 connect_bd_intf_net [get_bd_intf_pins $ps/M_AXI_GP0] [get_bd_intf_pins $gp/S00_AXI]
 connect_bd_intf_net [get_bd_intf_pins $gp/M00_AXI] [get_bd_intf_pins $dma/S_AXI_LITE]
@@ -93,6 +94,12 @@ set peripheral_resetn [get_bd_pins $rst/peripheral_aresetn]
 connect_bd_net $peripheral_resetn [get_bd_pins $dma/axi_resetn] [get_bd_pins $pipeline/resetn]
 connect_bd_net $fclk [get_bd_pins $gpio_diag/s_axi_aclk]
 connect_bd_net $interconnect_resetn [get_bd_pins $gpio_diag/s_axi_aresetn]
+connect_bd_net $fclk [get_bd_pins $runtime_probe/fclk0]
+connect_bd_net [get_bd_pins $ps/FCLK_RESET0_N] [get_bd_pins $runtime_probe/fclk_reset0_n]
+connect_bd_net $interconnect_resetn [get_bd_pins $runtime_probe/interconnect_aresetn]
+connect_bd_net $peripheral_resetn [get_bd_pins $runtime_probe/peripheral_aresetn]
+set runtime_led_port [create_bd_port -dir O -from 3 -to 0 dbg_led_n]
+connect_bd_net [get_bd_pins $runtime_probe/dbg_led_n] $runtime_led_port
 
 assign_bd_address -offset 0x40400000 -range 64K \
     -target_address_space [get_bd_addr_spaces $ps/Data] \
@@ -151,6 +158,16 @@ foreach {pin label} [list \
     $rst/peripheral_aresetn RESET_PERIPHERAL \
     $dma/axi_resetn DMA_RESET \
     $pipeline/resetn PIPELINE_RESET] { assert_one_net $pin $label }
+set runtime_led_ports [get_bd_ports -quiet dbg_led_n]
+if {[llength $runtime_led_ports] != 1} { error "runtime probe LED port count expected 1: $runtime_led_ports" }
+if {[get_property LEFT $runtime_led_ports] != 3 || [get_property RIGHT $runtime_led_ports] != 0} {
+    error "runtime probe LED port width expected [3:0]: [get_property LEFT $runtime_led_ports]:[get_property RIGHT $runtime_led_ports]"
+}
+foreach {pin label} [list \
+    $runtime_probe/fclk0 RUNTIME_PROBE_FCLK0 \
+    $runtime_probe/fclk_reset0_n RUNTIME_PROBE_FCLK_RESET0_N \
+    $runtime_probe/interconnect_aresetn RUNTIME_PROBE_INTERCONNECT_RESET \
+    $runtime_probe/peripheral_aresetn RUNTIME_PROBE_PERIPHERAL_RESET] { assert_one_net $pin $label }
 foreach {pin label} [list \
     $ps/M_AXI_GP0 GP0_INTERFACE \
     $gp/M00_AXI GP0_TO_DMA \

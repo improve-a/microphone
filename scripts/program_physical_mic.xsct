@@ -1,11 +1,20 @@
 # Volatile-only AX7Z020 programming and PS7 clock initialization.
-foreach var {MIC_BITFILE MIC_INIT_TCL MIC_ELF} {
+set observe_only 0
+if {[info exists ::env(MIC_OBSERVE_ONLY)] && $::env(MIC_OBSERVE_ONLY) eq "1"} {
+    set observe_only 1
+}
+foreach var {MIC_BITFILE MIC_INIT_TCL} {
     if {![info exists ::env($var)] || $::env($var) eq ""} { error "$var is required" }
     if {![file exists [file normalize $::env($var)]]} { error "$var file missing: $::env($var)" }
 }
+if {!$observe_only && (![info exists ::env(MIC_ELF)] || $::env(MIC_ELF) eq "")} {
+    error "MIC_ELF is required unless MIC_OBSERVE_ONLY=1"
+}
 set bitfile [file normalize $::env(MIC_BITFILE)]
 set init_tcl [file normalize $::env(MIC_INIT_TCL)]
-set elf [file normalize $::env(MIC_ELF)]
+set elf ""
+if {[info exists ::env(MIC_ELF)] && $::env(MIC_ELF) ne ""} { set elf [file normalize $::env(MIC_ELF)] }
+if {!$observe_only && ![file exists $elf]} { error "MIC_ELF file missing: $elf" }
 
 # Keep each probe as a separate DAP transaction.  The register names and
 # addresses are taken from the generated ps7_init.tcl and Zynq-7000 SLCR map:
@@ -95,6 +104,12 @@ if {$lvl ne "" && $lvl != 0xF} {
     if {$lvl == 0xF && $fpga_rst == 0} { puts "MIC_PS_PL_LEVEL_SHIFTERS_ENABLED" }
 } elseif {$lvl == 0xF} {
     puts "MIC_PS_PL_LEVEL_SHIFTERS_ENABLED"
+}
+if {$observe_only} {
+    puts "MIC_RUNTIME_LED_OBSERVE_ONLY"
+    puts "MIC_RUNTIME_LED_OBSERVE_READY"
+    disconnect
+    exit 0
 }
 puts "MIC_PRE_ELF_MMIO_PROBE_BEGIN_GP0"
 if {[mic_probe_mrd GPIO_DIAGNOSTIC_DATA 0x41200000]} { puts "MIC_GP0_GPIO_PHYSICAL_PASS" }

@@ -17,8 +17,35 @@ add_files -norecurse [list \
     [file join $repo_dir rtl pcm_axis_packer.sv] \
     [file join $repo_dir rtl mic_dma_pipeline.sv] \
     [file join $repo_dir rtl mic_dma_pipeline_ref.v] \
-    [file join $repo_dir rtl resetn_inverter.v]]
+    [file join $repo_dir rtl resetn_inverter.v] \
+    [file join $repo_dir rtl pl_runtime_probe.sv] \
+    [file join $repo_dir rtl pl_runtime_probe_ref.v]]
 add_files -fileset constrs_1 -norecurse [file join $repo_dir vivado lc_ai_k210_7mic.xdc]
+add_files -fileset constrs_1 -norecurse [file join $repo_dir vivado pl_runtime_probe.xdc]
+# Check the board LED assignments before synthesis.  Each package pin must be
+# assigned exactly once, and only to the runtime probe port.
+set led_xdc [file join $repo_dir vivado pl_runtime_probe.xdc]
+set led_fh [open $led_xdc r]
+set led_text [read $led_fh]
+close $led_fh
+set led_pin_matches [regexp -all -inline {PACKAGE_PIN\s+([A-Z][0-9]+)\s+\[get_ports\s+\{([[:alnum:]_\[\]]+)\}\]} $led_text]
+if {[llength $led_pin_matches] != 12} {
+    error "unexpected runtime LED constraint count: $led_pin_matches"
+}
+set led_assignments [dict create]
+for {set i 0} {$i < [llength $led_pin_matches]} {incr i 3} {
+    dict set led_assignments [lindex $led_pin_matches [expr {$i + 1}]] [lindex $led_pin_matches [expr {$i + 2}]]
+}
+foreach {led_pin led_port} {
+    J14 {dbg_led_n[0]}
+    K14 {dbg_led_n[1]}
+    J18 {dbg_led_n[2]}
+    H18 {dbg_led_n[3]}
+} {
+    if {![dict exists $led_assignments $led_pin] || [dict get $led_assignments $led_pin] ne $led_port} {
+        error "runtime LED constraint missing or mismatched: $led_pin -> $led_port"
+    }
+}
 update_compile_order -fileset sources_1
 create_bd_design mic_dma_system
 source [file join $script_dir create_mic_dma_bd.tcl]
