@@ -70,6 +70,25 @@ microphone or UDP success from the ELF/CPU token.
 - no lwIP UDP transmission or MATLAB live packet;
 - no QSPI/Flash write (intentionally).
 
+## 2026-09-03 acoustic gate
+
+The 100M Ethernet/UDP path is physically passing (see
+`evidence/physical/20260903_final_acceptance`). An automated MATLAB `udpport`
+run then exposed that the earlier bitstream still selected the deterministic
+synthetic source (`SOURCE_MODE=0`). A single Vivado rebuild with
+`MIC_SOURCE_MODE=1` selected the real I2S frontend; the existing AXI/DMA/DDR
+and Ethernet design was not otherwise changed. Vivado implementation passed
+(WNS +10.624 ns), and the matching lwIP BSP/ELF was rebuilt.
+
+The real-I2S acoustic run received 21,310 valid PCM datagrams with zero CRC,
+malformed, loss, duplicate or ordering errors. CH1-7 were saturated near
+full-scale and showed no three-peak acoustic response; CH8 was effectively
+zero. This is an I2S extraction/input-level blocker (edge/valid-bit or pin
+electrical state), not a MATLAB scaling issue. The automated evidence is under
+`evidence/physical/20260903_acoustic_i2s_auto/`. The markers
+`MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS` and `MIC_MATLAB_LIVE_PHYSICAL_PASS`
+remain intentionally unrecorded.
+
 ## Next physical steps
 
 1. Obtain the microphone part number, datasheet and board/adapter schematic.

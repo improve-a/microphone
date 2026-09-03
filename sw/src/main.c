@@ -27,7 +27,10 @@
 #define REAR_GUARD  0x2468ACE0U
 #define POISON      0xDEADBEEFU
 #define WAIT_LIMIT  40000000U
-#define MIC_MAX_FRAMES 4096U
+/* Keep the board streaming long enough for a human acoustic action after the
+ * host receiver has confirmed readiness.  At 128 samples/frame this is just
+ * over one minute on the validated 48.828 kHz capture path. */
+#define MIC_MAX_FRAMES 24576U
 #define MIC_UDP_PORT 45123U
 #define MIC_GEM_BASE XPAR_XEMACPS_0_BASEADDR
 #define MIC_PHY_ADDR 3U

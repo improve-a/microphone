@@ -3,13 +3,12 @@
 Offline-first FPGA/PS pipeline for a parameterized digital microphone array on
 the ALINX AX7Z020 (XC7Z020).
 
-The physical microphone protocol and GPIO mapping are not yet known. Until the
-hardware facts are available, development uses a deterministic eight-channel
-PCM stream and keeps the board-facing frontend behind
-`REAL_MIC_PROTOCOL_PENDING` has been replaced by a staged LC-AI-K210-7Mic
-I2S frontend. Seven MSM261S4030H0R microphones map to M0..M6 and channel 7 is
-forced to zero. The current clock plan is BCK 3.125 MHz and WS 48.828125 kHz
-from the 50 MHz PS FCLK; I2S bit alignment remains pending an ILA capture.
+The board-facing frontend is a staged LC-AI-K210-7Mic I2S receiver. Seven
+MSM261S4030H0R microphones map to M0..M6 and channel 7 is forced to zero. The
+validated acoustic Ethernet path is 100 Mbps full duplex, with UDP/45123 and
+the existing PCM16LE protocol. The I2S bitstream is selected with
+`MIC_SOURCE_MODE=1`; the default synthetic source remains available for
+offline tests only.
 
 Development targets Vivado and Xilinx SDK 2019.1. No board programming or
 physical hardware access is now staged and remains volatile-only (no QSPI write).
@@ -21,6 +20,9 @@ E:\vivado\Vivado\2019.1\bin\vivado.bat -mode batch -source vivado\build_mic_dma.
 E:\vivado\SDK\2019.1\bin\xsct.bat scripts\program_physical_mic.xsct
 scripts\capture_uart.ps1 -Port COM4
 matlab -batch "cd('D:/microphone'); addpath('matlab'); live_mic_receiver('LocalPort',45123)"
+
+# Automated acoustic capture (MATLAB ready marker, XSCT download, and analysis)
+powershell -ExecutionPolicy Bypass -File scripts\run_acoustic_acceptance.ps1
 ```
 
 The stable physical link uses 100 Mbps full duplex: board `192.168.1.10/24`

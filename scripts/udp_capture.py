@@ -24,6 +24,8 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=45123)
     parser.add_argument("--seconds", type=float, default=12.0)
     parser.add_argument("--output", type=Path, default=Path("evidence/physical/udp_capture"))
+    parser.add_argument("--expected-pcm-packets", type=int, default=8192,
+                        help="Expected PCM datagrams; use 0 for open-ended streaming evidence")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     raw_path = args.output / "udp_raw_capture.bin"
@@ -90,8 +92,10 @@ def main() -> int:
         "heartbeat_sequences": heartbeats,
         "pcm_packets": len(pcm),
         "raw_udp_diagnostic_packets": raw_udp,
-        "expected_pcm_packets": 8192,
-        "pcm_complete": len(pcm) == 8192 and malformed == 0 and missing == 0 and late == 0,
+        "expected_pcm_packets": args.expected_pcm_packets if args.expected_pcm_packets > 0 else None,
+        "pcm_complete": ((args.expected_pcm_packets <= 0 and len(pcm) > 0) or
+                         (args.expected_pcm_packets > 0 and len(pcm) == args.expected_pcm_packets))
+            and malformed == 0 and missing == 0 and late == 0,
         "pcm_first_sequence": sequences[0] if sequences else None,
         "pcm_last_sequence": sequences[-1] if sequences else None,
         "sequence_gaps": missing,
@@ -106,7 +110,7 @@ def main() -> int:
     }
     stats_path.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(stats, indent=2))
-    return 0 if heartbeats and len(pcm) == 8192 and malformed == 0 and missing == 0 and late == 0 else 2
+    return 0 if heartbeats and stats["pcm_complete"] else 2
 
 
 if __name__ == "__main__":

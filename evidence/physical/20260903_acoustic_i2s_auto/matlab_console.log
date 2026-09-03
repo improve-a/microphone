@@ -1,0 +1,2 @@
+MIC_ACOUSTIC_ACTION_READY pcm_packets=20 datagrams=50
+MIC_MATLAB_LIVE_CAPTURE received=21340 heartbeat=20 pcm=21310 missing=0 duplicates=0 malformed=0 crc=0 ready=1

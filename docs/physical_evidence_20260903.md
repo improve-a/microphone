@@ -36,6 +36,23 @@ MATLAB `udpport` live receive/plot parsing passed with the same 8222 datagrams;
 `MIC_MATLAB_LIVE_PHYSICAL_PASS` is intentionally left pending until a user
 performs the requested拍手 or per-channel voice-response check in the live plot.
 
+## Automated real-I2S acoustic attempt
+
+The automated capture initially proved that the prior bitstream selected the
+deterministic synthetic source (`SOURCE_MODE=0`), so no acoustic conclusion was
+drawn from it. Because this was a direct data-analysis finding, Vivado was
+rebuilt once with `MIC_SOURCE_MODE=1`; the existing AXI/DMA/Ethernet design was
+unchanged. The new implementation passed with WNS `+10.624 ns`, and a matching
+100M lwIP BSP/ELF was generated.
+
+In `evidence/physical/20260903_acoustic_i2s_auto/`, MATLAB received 21,310
+valid PCM datagrams with zero protocol errors or sequence loss. CH1-7 were
+saturated near full scale and had no three time-separated RMS peaks during the
+requested three-clap action; CH8 was effectively zero. This isolates the
+remaining blocker to real-I2S extraction/input level (edge/valid-bit or pin
+electrical state). Neither `MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS` nor
+`MIC_MATLAB_LIVE_PHYSICAL_PASS` is recorded.
+
 The temporary firewall rule could not be created without elevation; the exact
 administrator command is recorded in the task log. No Vivado rebuild, Flash
 write, or DMA/PL modification was used.
