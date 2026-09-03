@@ -73,6 +73,17 @@ in this historical run are empty because board startup and shutdown fell
 outside the receiver's rolling-capture boundaries; this does not affect the
 complete packet-count, sequence, CRC, or bounded-completion result above.
 
+Recorded physical markers for this branch are:
+
+```
+MIC_ETHERNET_L2_100M_PHYSICAL_PASS
+MIC_ARP_PHYSICAL_PASS
+MIC_UDP_HEARTBEAT_PHYSICAL_PASS
+MIC_UDP_PCM_PHYSICAL_PASS
+MIC_DMA_CONTINUOUS_1H_PASS
+MIC_UDP_CONTINUOUS_1H_PASS
+```
+
 ## Acoustic Status
 
 No audible stimulus was generated during the overnight run. Therefore
