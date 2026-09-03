@@ -1,0 +1,87 @@
+
+****** Vivado v2019.1 (64-bit)
+  **** SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+  **** IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+    ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+source {D:\microphone\evidence\physical\20260903_runtime_probe_resetfix\inspect_reset_dcp.tcl} -notrace
+Command: open_checkpoint D:/microphone/vivado/build/mic_dma_runtime_probe_resetfix_20260903/mic_dma.runs/impl_1/mic_dma_system_wrapper_routed.dcp
+
+Starting open_checkpoint Task
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.031 . Memory (MB): peak = 299.961 ; gain = 0.000
+INFO: [Device 21-403] Loading part xc7z020clg400-2
+INFO: [Netlist 29-17] Analyzing 853 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2019.1
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Timing 38-478] Restoring timing data from binary archive.
+INFO: [Timing 38-479] Binary timing data restore complete.
+INFO: [Project 1-856] Restoring constraints from binary archive.
+INFO: [Project 1-853] Binary constraint restore complete.
+Reading XDEF placement.
+Reading placer database...
+Reading XDEF routing.
+Read XDEF File: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.707 . Memory (MB): peak = 1440.734 ; gain = 1.961
+Restored from archive | CPU: 1.000000 secs | Memory: 0.000000 MB |
+Finished XDEF File Restore: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.707 . Memory (MB): peak = 1440.734 ; gain = 1.961
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.004 . Memory (MB): peak = 1440.734 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 406 instances were transformed.
+  CFGLUT5 => CFGLUT5 (SRLC32E, SRL16E): 396 instances
+  RAM32M => RAM32M (RAMD32, RAMD32, RAMD32, RAMD32, RAMD32, RAMD32, RAMS32, RAMS32): 10 instances
+
+INFO: [Project 1-604] Checkpoint was created with Vivado v2019.1 (64-bit) build 2552052
+open_checkpoint: Time (s): cpu = 00:00:14 ; elapsed = 00:00:17 . Memory (MB): peak = 1440.734 ; gain = 1140.773
+MIC_DCP_TOP=mic_dma_system_wrapper
+MIC_DCP_PIN mic_dma_system_i/processing_system7_0/FCLK_CLK0 NETS=mic_dma_system_i/processing_system7_0_FCLK_CLK0
+MIC_DCP_PIN mic_dma_system_i/processing_system7_0/FCLK_RESET0_N NETS=mic_dma_system_i/processing_system7_0_FCLK_RESET0_N
+MIC_DCP_PIN mic_dma_system_i/resetn_inverter_0/resetn_i NETS=mic_dma_system_i/processing_system7_0_FCLK_RESET0_N
+MIC_DCP_PIN mic_dma_system_i/resetn_inverter_0/reset_o NETS=mic_dma_system_i/resetn_inverter_0_reset_o
+MIC_DCP_PIN mic_dma_system_i/proc_sys_reset_0/slowest_sync_clk NETS=mic_dma_system_i/processing_system7_0_FCLK_CLK0
+MIC_DCP_PIN mic_dma_system_i/proc_sys_reset_0/ext_reset_in NETS=mic_dma_system_i/resetn_inverter_0_reset_o
+MIC_DCP_PIN mic_dma_system_i/proc_sys_reset_0/dcm_locked NETS=
+MIC_DCP_PIN mic_dma_system_i/proc_sys_reset_0/interconnect_aresetn NETS=mic_dma_system_i/proc_sys_reset_0_interconnect_aresetn
+MIC_DCP_PIN mic_dma_system_i/proc_sys_reset_0/peripheral_aresetn NETS=mic_dma_system_i/proc_sys_reset_0_peripheral_aresetn
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/ACTIVE_LOW_BSR_OUT_DFF[0].FDRE_BSR_N INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ_n_3 Q=mic_dma_system_i/proc_sys_reset_0/U0/interconnect_aresetn[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/ACTIVE_LOW_PR_OUT_DFF[0].FDRE_PER_N INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ_n_4 Q=mic_dma_system_i/proc_sys_reset_0/U0/peripheral_aresetn[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/AUX_LPF[1].asr_lpf_reg[1] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_3_in1_in Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_2_in
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/AUX_LPF[2].asr_lpf_reg[2] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_2_in Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_1_in
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/AUX_LPF[3].asr_lpf_reg[3] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_1_in Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/asr_lpf[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/EXT_LPF[1].exr_lpf_reg[1] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_3_out[3] Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_3_out[2]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/EXT_LPF[2].exr_lpf_reg[2] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_3_out[2] Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_3_out[1]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/EXT_LPF[3].exr_lpf_reg[3] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_3_out[1] Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/p_3_out[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/lpf_asr_reg INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX_n_0 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/lpf_asr
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/lpf_exr_reg INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT_n_0 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/lpf_exr
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/lpf_int_reg INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/lpf_int0__0 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/lpf_int
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_IN_cdc_to INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/aux_reset_in Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/s_level_out_d1_cdc_to
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d2 INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/s_level_out_d1_cdc_to Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/s_level_out_d2
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d3 INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/s_level_out_d2 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/s_level_out_d3
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d4 INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/s_level_out_d3 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_AUX.ACT_HI_AUX/scndry_out
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_IN_cdc_to INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/exr_d1 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/s_level_out_d1_cdc_to
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d2 INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/s_level_out_d1_cdc_to Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/s_level_out_d2
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d3 INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/s_level_out_d2 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/s_level_out_d3
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d4 INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/s_level_out_d3 Q=mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/ACTIVE_HIGH_EXT.ACT_HI_EXT/scndry_out
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/bsr_dec_reg[0] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/p_5_out[0] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/bsr_dec_reg_n_0_[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/bsr_dec_reg[2] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/p_5_out[2] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/bsr_dec_reg_n_0_[2]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/core_dec_reg[0] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/core_dec[0]_i_1_n_0 Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/core_dec_reg_n_0_[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/core_dec_reg[1] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/pr_dec0__0 Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/core_dec_reg_n_0_[1]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/core_dec_reg[2] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/core_dec[2]_i_1_n_0 Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/p_0_in
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/pr_dec_reg[0] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/p_3_out[0] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/pr_dec_reg_n_0_[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/pr_dec_reg[2] INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/p_3_out[2] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/pr_dec_reg_n_0_[2]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/seq_clr_reg INIT=1'b0 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/<const1> Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/seq_clr
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int_reg[0] INIT=1'b1 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int0[0] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/Q[0]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int_reg[1] INIT=1'b1 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int0[1] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/Q[1]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int_reg[2] INIT=1'b1 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int0[2] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/Q[2]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int_reg[3] INIT=1'b1 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int0[3] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/Q[3]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int_reg[4] INIT=1'b1 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int0[4] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/Q[4]
+MIC_DCP_RESET_FF mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int_reg[5] INIT=1'b1 D=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/q_int0[5] Q=mic_dma_system_i/proc_sys_reset_0/U0/SEQ/SEQ_COUNTER/Q[5]
+MIC_DCP_RESET_SRL mic_dma_system_i/proc_sys_reset_0/U0/EXT_LPF/POR_SRL_I REF=SRL16E INIT=16'hFFFF
+Command: report_drc -file D:/microphone/evidence/physical/20260903_runtime_probe_resetfix/reset_dcp_drc.rpt
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'E:/vivado/Vivado/2019.1/data/ip'.
+INFO: [DRC 23-27] Running DRC with 2 threads
+INFO: [Coretcl 2-168] The results of DRC are in file D:/microphone/evidence/physical/20260903_runtime_probe_resetfix/reset_dcp_drc.rpt.
+report_drc completed successfully
+INFO: [Common 17-206] Exiting Vivado at Thu Sep  3 14:41:10 2026...

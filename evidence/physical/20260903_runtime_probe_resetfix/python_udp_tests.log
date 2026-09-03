@@ -1,0 +1,11 @@
+test_known_channel_delay_recovery (test_udp_protocol.UdpProtocolTests.test_known_channel_delay_recovery) ... ok
+test_loss_duplicate_and_malformed_policy (test_udp_protocol.UdpProtocolTests.test_loss_duplicate_and_malformed_policy) ... ok
+test_malformed_crc_and_lengths_rejected (test_udp_protocol.UdpProtocolTests.test_malformed_crc_and_lengths_rejected) ... ok
+test_mtu_header_and_signed_recovery (test_udp_protocol.UdpProtocolTests.test_mtu_header_and_signed_recovery) ... ok
+test_packet_file_round_trip (test_udp_protocol.UdpProtocolTests.test_packet_file_round_trip) ... ok
+test_sequence_and_exact_matrix_reconstruction (test_udp_protocol.UdpProtocolTests.test_sequence_and_exact_matrix_reconstruction) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.098s
+
+OK
