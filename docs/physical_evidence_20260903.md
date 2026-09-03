@@ -30,8 +30,11 @@ MIC_ETHERNET_L2_100M_PHYSICAL_PASS
 MIC_ARP_PHYSICAL_PASS
 MIC_UDP_HEARTBEAT_PHYSICAL_PASS
 MIC_UDP_PCM_PHYSICAL_PASS
-MIC_MATLAB_LIVE_PHYSICAL_PASS
 ```
+
+MATLAB `udpport` live receive/plot parsing passed with the same 8222 datagrams;
+`MIC_MATLAB_LIVE_PHYSICAL_PASS` is intentionally left pending until a user
+performs the requested拍手 or per-channel voice-response check in the live plot.
 
 The temporary firewall rule could not be created without elevation; the exact
 administrator command is recorded in the task log. No Vivado rebuild, Flash
