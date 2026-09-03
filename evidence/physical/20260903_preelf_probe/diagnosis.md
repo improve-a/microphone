@@ -97,3 +97,22 @@ register implementation failure. No ELF was downloaded in this retry.
 
 The retry log is `evidence/physical/20260903_gpio_diag_powercycle/xsct.log`;
 the UART capture was started before JTAG and recorded zero application bytes.
+
+## Ordered level-shifter retry
+
+With the reset-before-FPGA order, the generated PS7 post-config selected
+silicon branch `0x3` and the live reads were:
+
+```
+MIC_PS7_POST_CONFIG_LVL_SHFTR_WRITE_PRESENT=1
+MIC_PS7_POST_CONFIG_SILICON_VERSION=0x3
+MIC_LVL_SHFTR_EN_VALUE=0x0000000F
+MIC_FPGA0_CLK_CTRL_VALUE=0x00400500
+MIC_FPGA_RST_CTRL_VALUE=0x00000000
+MIC_PS_PL_LEVEL_SHIFTERS_ENABLED
+```
+
+The independent GPIO diagnostic slave at `0x41200000` still timed out, before
+the DMA `0x40400030` read. This rules out PS-PL level-shifter enablement and
+post-config ordering as the cause; runtime `proc_sys_reset`/FCLK or GP0
+interconnect behavior remains to be observed.

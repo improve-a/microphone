@@ -35,7 +35,8 @@ proc mic_read_slcr_value {label address} {
     }
     puts "MIC_SLCR_READ_RESULT $label VALUE=$value"
     if {[regexp -nocase {:\s*([0-9a-f]{1,8})} $value -> hex]} {
-        return [expr {0x$hex}]
+        scan $hex %x parsed
+        return $parsed
     }
     return ""
 }
