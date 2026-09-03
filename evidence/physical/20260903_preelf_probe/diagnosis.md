@@ -77,3 +77,23 @@ No `MIC_AFTER_DMA_CFG`, `MIC_DMA_AXIL_PHYSICAL_PASS`, DMA/DDR, UDP, MATLAB, or
 ILA waveform evidence exists for this run. The UART capture was started before
 JTAG and contains no application bytes because the pre-ELF probe stopped the
 sequence before ELF download.
+
+## Power-cycle retry with GP0 diagnostic slave
+
+After a physical board/JTAG power cycle, the same diagnostic bitstream was
+downloaded successfully and APU targets were present. The independent GPIO
+slave at `0x41200000` timed out before the DMA read:
+
+```
+MIC_PRE_ELF_READ_BEGIN GPIO_DIAGNOSTIC_DATA ADDRESS=0x41200000
+MIC_PRE_ELF_READ_ERROR GPIO_DIAGNOSTIC_DATA ERROR=Timeout waiting for the Instruction Complete bit
+MIC_PRE_ELF_READ_BEGIN DMA_S2MM_DMACR ADDRESS=0x40400030
+MIC_PRE_ELF_READ_ERROR DMA_S2MM_DMACR ERROR=AP transaction error, DAP status f0000021
+MIC_DMA_AXIL_PRE_ELF_READ_HANG
+```
+
+This is a GP0/interconnect clock or reset-domain failure, not a DMA-only
+register implementation failure. No ELF was downloaded in this retry.
+
+The retry log is `evidence/physical/20260903_gpio_diag_powercycle/xsct.log`;
+the UART capture was started before JTAG and recorded zero application bytes.
