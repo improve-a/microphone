@@ -2,15 +2,19 @@
 #include "mic_udp_protocol.h"
 
 #include "xaxidma.h"
+#include "xemacps.h"
+#include "xemacps_hw.h"
 #include "xil_cache.h"
 #include "xil_printf.h"
 #include "xparameters.h"
 #include "xstatus.h"
 #include "lwip/init.h"
+#include "lwip/etharp.h"
 #include "lwip/ip_addr.h"
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 #include "netif/xadapter.h"
+#include "netif/xemacpsif.h"
 #include "platform.h"
 #include "platform_config.h"
 #include "sleep.h"
@@ -25,6 +29,26 @@
 #define WAIT_LIMIT  40000000U
 #define MIC_MAX_FRAMES 4096U
 #define MIC_UDP_PORT 45123U
+#define MIC_GEM_BASE XPAR_XEMACPS_0_BASEADDR
+#define MIC_PHY_ADDR 3U
+#define MIC_HOST_MAC0 0x00U
+#define MIC_HOST_MAC1 0xE0U
+#define MIC_HOST_MAC2 0x4CU
+#define MIC_HOST_MAC3 0x17U
+#define MIC_HOST_MAC4 0x46U
+#define MIC_HOST_MAC5 0x98U
+
+/* KSZ9031RNX Clause-45 MMD 2 RGMII pad-skew registers. */
+#define KSZ9031_MMD_CTRL 13U
+#define KSZ9031_MMD_DATA 14U
+#define KSZ9031_MMD_DEVAD 2U
+#define KSZ9031_CONTROL_PAD_SKEW 4U
+#define KSZ9031_RX_DATA_PAD_SKEW 5U
+#define KSZ9031_TX_DATA_PAD_SKEW 6U
+#define KSZ9031_CLK_PAD_SKEW 8U
+#define IEEE_BMCR 0U
+#define IEEE_BMCR_FULL_DUPLEX 0x0100U
+#define IEEE_BMCR_SPEED100 0x2000U
 
 static XAxiDma dma;
 static struct netif server_netif;
@@ -32,6 +56,143 @@ struct netif *echo_netif = &server_netif;
 static struct udp_pcb *mic_udp;
 static ip_addr_t host_ip;
 static uint32_t packet_sequence;
+static uint32_t send_trace_count;
+static uint32_t input_calls;
+static uint32_t input_packets;
+static void service_network(void);
+static int send_raw_broadcast(void);
+
+static int ksz9031_mmd_read(XEmacPs *emacps, uint16_t reg, uint16_t *value)
+{
+    if (XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, KSZ9031_MMD_CTRL,
+            KSZ9031_MMD_DEVAD) != XST_SUCCESS ||
+        XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, KSZ9031_MMD_DATA, reg) != XST_SUCCESS ||
+        XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, KSZ9031_MMD_CTRL,
+            0x4000U | KSZ9031_MMD_DEVAD) != XST_SUCCESS ||
+        XEmacPs_PhyRead(emacps, MIC_PHY_ADDR, KSZ9031_MMD_DATA, value) != XST_SUCCESS)
+        return 0;
+    return 1;
+}
+
+static int ksz9031_mmd_write(XEmacPs *emacps, uint16_t reg, uint16_t value)
+{
+    if (XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, KSZ9031_MMD_CTRL,
+            KSZ9031_MMD_DEVAD) != XST_SUCCESS ||
+        XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, KSZ9031_MMD_DATA, reg) != XST_SUCCESS ||
+        XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, KSZ9031_MMD_CTRL,
+            0x4000U | KSZ9031_MMD_DEVAD) != XST_SUCCESS ||
+        XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, KSZ9031_MMD_DATA, value) != XST_SUCCESS)
+        return 0;
+    return 1;
+}
+
+static void ksz9031_configure_rgmii(XEmacPs *emacps)
+{
+    static const uint16_t regs[] = { KSZ9031_CONTROL_PAD_SKEW,
+        KSZ9031_RX_DATA_PAD_SKEW, KSZ9031_TX_DATA_PAD_SKEW,
+        KSZ9031_CLK_PAD_SKEW };
+    /* Preserve the board's strap-calibrated RGMII delays and write them back
+     * explicitly so the setting is deterministic after reset. */
+    static const uint16_t values[] = { 0x0077U, 0x7777U, 0x7777U, 0x3DEFU };
+    uint16_t value;
+    uint32_t index;
+    for (index = 0; index < (uint32_t)(sizeof(regs) / sizeof(regs[0])); ++index) {
+        if (!ksz9031_mmd_read(emacps, regs[index], &value)) {
+            xil_printf("MIC_PHY3_MMD2_REG%u=READ_FAIL\r\n", (unsigned)regs[index]);
+            continue;
+        }
+        xil_printf("MIC_PHY3_MMD2_REG%u_BEFORE=0x%04x\r\n",
+            (unsigned)regs[index], (unsigned)value);
+        if (!ksz9031_mmd_write(emacps, regs[index], values[index]) ||
+            !ksz9031_mmd_read(emacps, regs[index], &value)) {
+            xil_printf("MIC_PHY3_MMD2_REG%u_WRITE_FAIL\r\n", (unsigned)regs[index]);
+            continue;
+        }
+        xil_printf("MIC_PHY3_MMD2_REG%u_AFTER=0x%04x\r\n",
+            (unsigned)regs[index], (unsigned)value);
+    }
+}
+
+static void force_100m_full_duplex(XEmacPs *emacps)
+{
+    uint16_t bmcr = 0U;
+    uint32_t nwcfg;
+    if (XEmacPs_PhyWrite(emacps, MIC_PHY_ADDR, IEEE_BMCR,
+            IEEE_BMCR_SPEED100 | IEEE_BMCR_FULL_DUPLEX) != XST_SUCCESS ||
+        XEmacPs_PhyRead(emacps, MIC_PHY_ADDR, IEEE_BMCR, &bmcr) != XST_SUCCESS) {
+        xil_printf("MIC_PHY3_FORCE_100M_FAIL\r\n");
+    } else {
+        xil_printf("MIC_PHY3_BMCR_100M=0x%04x\r\n", (unsigned)bmcr);
+    }
+    nwcfg = XEmacPs_ReadReg(MIC_GEM_BASE, XEMACPS_NWCFG_OFFSET);
+    nwcfg &= ~XEMACPS_NWCFG_1000_MASK;
+    nwcfg |= XEMACPS_NWCFG_100_MASK | XEMACPS_NWCFG_FDEN_MASK;
+    XEmacPs_WriteReg(MIC_GEM_BASE, XEMACPS_NWCFG_OFFSET, nwcfg);
+    xil_printf("MIC_GEM_FORCE_100M_NWCFG=0x%08x\r\n",
+        (unsigned)XEmacPs_ReadReg(MIC_GEM_BASE, XEMACPS_NWCFG_OFFSET));
+}
+
+static void gem_tx_diag(const char *stage)
+{
+    UINTPTR base = MIC_GEM_BASE;
+    uint32_t txqbase = XEmacPs_ReadReg(base, XEMACPS_TXQBASE_OFFSET);
+    uint32_t txq1base = XEmacPs_ReadReg(base, XEMACPS_TXQ1BASE_OFFSET);
+    uint32_t active_txq = (txq1base != 0U) ? txq1base : txqbase;
+    uint32_t version = XEmacPs_ReadReg(base, 0xFCU);
+    xil_printf("MIC_GEM_DIAG stage=%s VERSION=0x%08x NWCTRL=0x%08x NWCFG=0x%08x TXSR=0x%08x ISR=0x%08x TXQBASE=0x%08x TXQ1BASE=0x%08x INTQ1STS=0x%08x INTQ1IER=0x%08x INTQ1IMR=0x%08x OCTTXL=0x%08x TXCNT=0x%08x TXURUNCNT=0x%08x TXCSENSECNT=0x%08x\r\n",
+        stage,
+        (unsigned)version,
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_NWCTRL_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_NWCFG_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_TXSR_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_ISR_OFFSET),
+        (unsigned)txqbase,
+        (unsigned)txq1base,
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_INTQ1_STS_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_INTQ1_IER_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_INTQ1_IMR_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_OCTTXL_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_TXCNT_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_TXURUNCNT_OFFSET),
+        (unsigned)XEmacPs_ReadReg(base, XEMACPS_TXCSENSECNT_OFFSET));
+    if (active_txq != 0U) {
+        uint32_t ring_base = active_txq & ~0xFFU;
+        volatile uint32_t *ring = (volatile uint32_t *)(UINTPTR)ring_base;
+        Xil_DCacheInvalidateRange((INTPTR)ring, 128U);
+        xil_printf("MIC_GEM_TX_RING_BASE=0x%08x\r\n", (unsigned)ring_base);
+        for (uint32_t index = 0; index < 8U; ++index) {
+            xil_printf("MIC_GEM_TXRING index=%u WORD0=0x%08x WORD1=0x%08x\r\n",
+                (unsigned)index, (unsigned)ring[index * 2U],
+                (unsigned)ring[index * 2U + 1U]);
+        }
+        volatile uint32_t *descriptor = (volatile uint32_t *)(UINTPTR)active_txq;
+        Xil_DCacheInvalidateRange((INTPTR)descriptor, 64U);
+        for (uint32_t index = 0; index < 4U; ++index) {
+            uint32_t word0 = descriptor[index * 2U];
+            uint32_t word1 = descriptor[index * 2U + 1U];
+            xil_printf("MIC_GEM_TXBD index=%u WORD0=0x%08x WORD1=0x%08x USED=%u WRAP=%u LAST=%u LEN=%u\r\n",
+                (unsigned)index, (unsigned)word0, (unsigned)word1,
+                (unsigned)((word1 & XEMACPS_TXBUF_USED_MASK) != 0U),
+                (unsigned)((word1 & XEMACPS_TXBUF_WRAP_MASK) != 0U),
+                (unsigned)((word1 & XEMACPS_TXBUF_LAST_MASK) != 0U),
+                (unsigned)(word1 & XEMACPS_TXBUF_LEN_MASK));
+        }
+    }
+}
+
+static void gem_tx_ring_state(const char *stage)
+{
+    struct xemac_s *xemac = (struct xemac_s *)echo_netif->state;
+    xemacpsif_s *xemacps = (xemacpsif_s *)xemac->state;
+    XEmacPs_BdRing *ring = &XEmacPs_GetTxRing(&xemacps->emacps);
+    xil_printf("MIC_GEM_TX_STATE stage=%s BASE=0x%08x PHYS=0x%08x HWHEAD=0x%08x HWTAIL=0x%08x PREHEAD=0x%08x POSTHEAD=0x%08x HWCNT=%u PRECNT=%u POSTCNT=%u FREECNT=%u ALLCNT=%u RUN=%u\r\n",
+        stage, (unsigned)ring->BaseBdAddr, (unsigned)ring->PhysBaseAddr,
+        (unsigned)ring->HwHead, (unsigned)ring->HwTail,
+        (unsigned)ring->PreHead, (unsigned)ring->PostHead,
+        (unsigned)ring->HwCnt, (unsigned)ring->PreCnt,
+        (unsigned)ring->PostCnt, (unsigned)ring->FreeCnt,
+        (unsigned)ring->AllCnt, (unsigned)ring->RunState);
+}
 
 extern volatile int TcpFastTmrFlag;
 extern volatile int TcpSlowTmrFlag;
@@ -61,7 +222,45 @@ static void service_network(void)
         tcp_slowtmr();
         TcpSlowTmrFlag = 0;
     }
-    xemacif_input(echo_netif);
+    input_calls++;
+    {
+        int packets = xemacif_input(echo_netif);
+        if (packets > 0) input_packets += (uint32_t)packets;
+    }
+}
+
+static void print_rx_diag(const char *stage)
+{
+    struct xemac_s *xemac = (struct xemac_s *)echo_netif->state;
+    xemacpsif_s *xemacps = (xemacpsif_s *)xemac->state;
+    XEmacPs_BdRing *ring = &XEmacPs_GetRxRing(&xemacps->emacps);
+    xil_printf("MIC_RX_DIAG stage=%s INPUT_CALLS=%u INPUT_PACKETS=%u RXSR=0x%08x ISR=0x%08x RXCNT=%u RX64=%u OCTRXL=%u HWCNT=%u FREECNT=%u\r\n",
+        stage, (unsigned)input_calls, (unsigned)input_packets,
+        (unsigned)XEmacPs_ReadReg(MIC_GEM_BASE, XEMACPS_RXSR_OFFSET),
+        (unsigned)XEmacPs_ReadReg(MIC_GEM_BASE, XEMACPS_ISR_OFFSET),
+        (unsigned)XEmacPs_ReadReg(MIC_GEM_BASE, XEMACPS_RXCNT_OFFSET),
+        (unsigned)XEmacPs_ReadReg(MIC_GEM_BASE, XEMACPS_RX64CNT_OFFSET),
+        (unsigned)XEmacPs_ReadReg(MIC_GEM_BASE, XEMACPS_OCTRXL_OFFSET),
+        (unsigned)ring->HwCnt, (unsigned)ring->FreeCnt);
+}
+
+static void print_arp_entry(void)
+{
+    ip4_addr_t *ip = NULL;
+    struct netif *netif = NULL;
+    struct eth_addr *eth = NULL;
+    int found = 0;
+    for (size_t index = 0; index < 10U; ++index) {
+        if (etharp_get_entry(index, &ip, &netif, &eth) > 0 && ip != NULL &&
+            ip4_addr_cmp(ip, ip_2_ip4(&host_ip))) {
+            xil_printf("MIC_ARP_ENTRY state=STABLE IP=%u.%u.%u.%u MAC=%02x:%02x:%02x:%02x:%02x:%02x\r\n",
+                ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip), ip4_addr4(ip),
+                eth->addr[0], eth->addr[1], eth->addr[2], eth->addr[3],
+                eth->addr[4], eth->addr[5]);
+            found = 1;
+        }
+    }
+    if (!found) xil_printf("MIC_ARP_ENTRY state=EMPTY IP=192.168.1.2\r\n");
 }
 
 static int send_bytes(const uint8_t *bytes, uint16_t length)
@@ -70,7 +269,114 @@ static int send_bytes(const uint8_t *bytes, uint16_t length)
     err_t error;
     if (p == NULL) return 0;
     memcpy(p->payload, bytes, length);
+    if (send_trace_count < 3U) gem_tx_diag("UDP_BEFORE");
     error = udp_sendto(mic_udp, p, &host_ip, MIC_UDP_PORT);
+    pbuf_free(p);
+    if (send_trace_count < 3U || error != ERR_OK) {
+        xil_printf("MIC_UDP_SEND_ERR index=%u err=%d length=%u\r\n",
+            (unsigned)send_trace_count, (int)error, (unsigned)length);
+        if (send_trace_count < 3U) gem_tx_diag("UDP_AFTER");
+    }
+    send_trace_count++;
+    return error == ERR_OK;
+}
+
+static int send_raw_broadcast(void)
+{
+    static const uint8_t marker[] = "MIC_EXTERNAL_UNIQUE_100M_20260903";
+    struct pbuf *p = pbuf_alloc(PBUF_RAW, 60U, PBUF_RAM);
+    uint8_t *frame;
+    err_t error;
+    if (p == NULL) return 0;
+    frame = (uint8_t *)p->payload;
+    memset(frame, 0, 60U);
+    memset(frame, 0xFF, 6U);
+    memcpy(frame + 6U, echo_netif->hwaddr, 6U);
+    frame[12] = 0x88U;
+    frame[13] = 0xB5U;
+    memcpy(frame + 14U, marker, sizeof(marker) - 1U);
+    gem_tx_diag("RAW_BEFORE");
+    error = echo_netif->linkoutput(echo_netif, p);
+    xil_printf("MIC_RAW_L2_SEND_ERR err=%d length=60\r\n", (int)error);
+    gem_tx_diag("RAW_AFTER");
+    gem_tx_ring_state("RAW_AFTER");
+    pbuf_free(p);
+    return error == ERR_OK;
+}
+
+static int send_raw_arp_request(void)
+{
+    struct pbuf *p = pbuf_alloc(PBUF_RAW, 60U, PBUF_RAM);
+    uint8_t *frame;
+    err_t error;
+    static const uint8_t board_ip[4] = {192U, 168U, 1U, 10U};
+    static const uint8_t host_ip_bytes[4] = {192U, 168U, 1U, 2U};
+    if (p == NULL) return 0;
+    frame = (uint8_t *)p->payload;
+    memset(frame, 0, 60U);
+    memset(frame, 0xFF, 6U);
+    memcpy(frame + 6U, echo_netif->hwaddr, 6U);
+    frame[12] = 0x08U; frame[13] = 0x06U;
+    frame[14] = 0x00U; frame[15] = 0x01U; /* Ethernet */
+    frame[16] = 0x08U; frame[17] = 0x00U; /* IPv4 */
+    frame[18] = 0x06U; frame[19] = 0x04U;
+    frame[20] = 0x00U; frame[21] = 0x01U; /* request */
+    memcpy(frame + 22U, echo_netif->hwaddr, 6U);
+    memcpy(frame + 28U, board_ip, 4U);
+    memcpy(frame + 38U, host_ip_bytes, 4U);
+    gem_tx_diag("RAW_ARP_BEFORE");
+    error = echo_netif->linkoutput(echo_netif, p);
+    xil_printf("MIC_RAW_ARP_SEND_ERR err=%d length=60\r\n", (int)error);
+    gem_tx_diag("RAW_ARP_AFTER");
+    gem_tx_ring_state("RAW_ARP_AFTER");
+    pbuf_free(p);
+    return error == ERR_OK;
+}
+
+static uint16_t raw_checksum(const uint8_t *data, size_t length)
+{
+    uint32_t sum = 0U;
+    while (length > 1U) {
+        sum += ((uint16_t)data[0] << 8) | data[1];
+        data += 2; length -= 2;
+    }
+    if (length) sum += (uint16_t)data[0] << 8;
+    while (sum >> 16) sum = (sum & 0xFFFFU) + (sum >> 16);
+    return (uint16_t)~sum;
+}
+
+static int send_raw_ipv4_udp(uint32_t index)
+{
+    static const uint8_t marker[] = "MIC_RAW_UDP_UNIQUE_20260903";
+    const uint16_t udp_len = (uint16_t)(8U + sizeof(marker) - 1U);
+    const uint16_t ip_len = (uint16_t)(20U + udp_len);
+    const uint16_t frame_len = (uint16_t)(14U + ip_len < 60U ? 60U : 14U + ip_len);
+    struct pbuf *p = pbuf_alloc(PBUF_RAW, frame_len, PBUF_RAM);
+    uint8_t *frame;
+    uint8_t *ip;
+    uint8_t *udp;
+    err_t error;
+    static const uint8_t board_ip[4] = {192U,168U,1U,10U};
+    static const uint8_t host_ip_bytes[4] = {192U,168U,1U,2U};
+    if (p == NULL) return 0;
+    frame = (uint8_t *)p->payload;
+    memset(frame, 0, frame_len);
+    frame[0] = MIC_HOST_MAC0; frame[1] = MIC_HOST_MAC1; frame[2] = MIC_HOST_MAC2;
+    frame[3] = MIC_HOST_MAC3; frame[4] = MIC_HOST_MAC4; frame[5] = MIC_HOST_MAC5;
+    memcpy(frame + 6U, echo_netif->hwaddr, 6U);
+    frame[12] = 0x08U; frame[13] = 0x00U;
+    ip = frame + 14U;
+    ip[0] = 0x45U; ip[1] = 0U; ip[2] = (uint8_t)(ip_len >> 8); ip[3] = (uint8_t)ip_len;
+    ip[4] = (uint8_t)(index >> 8); ip[5] = (uint8_t)index; ip[6] = 0x40U; ip[7] = 0U;
+    ip[8] = 64U; ip[9] = 17U; memcpy(ip + 12U, board_ip, 4U); memcpy(ip + 16U, host_ip_bytes, 4U);
+    ip[10] = 0U; ip[11] = 0U;
+    { uint16_t checksum = raw_checksum(ip, 20U); ip[10] = (uint8_t)(checksum >> 8); ip[11] = (uint8_t)checksum; }
+    udp = ip + 20U;
+    udp[0] = 0xB0U; udp[1] = 0x01U; udp[2] = (uint8_t)(MIC_UDP_PORT >> 8); udp[3] = (uint8_t)MIC_UDP_PORT;
+    udp[4] = (uint8_t)(udp_len >> 8); udp[5] = (uint8_t)udp_len; udp[6] = 0U; udp[7] = 0U;
+    memcpy(udp + 8U, marker, sizeof(marker) - 1U);
+    error = echo_netif->linkoutput(echo_netif, p);
+    xil_printf("MIC_RAW_UDP_SEND index=%u err=%d length=%u\r\n", (unsigned)index, (int)error, (unsigned)frame_len);
     pbuf_free(p);
     return error == ERR_OK;
 }
@@ -98,10 +404,25 @@ static int network_init(void)
         xil_printf("MIC_GEM0_INIT_FAIL\r\n");
         return 0;
     }
+    {
+        struct xemac_s *xemac = (struct xemac_s *)echo_netif->state;
+        xemacpsif_s *xemacps = (xemacpsif_s *)xemac->state;
+        ksz9031_configure_rgmii(&xemacps->emacps);
+        force_100m_full_duplex(&xemacps->emacps);
+        for (uint32_t phy_reg = 0U; phy_reg <= 10U; ++phy_reg) {
+        uint16_t phy_value = 0U;
+        if (XEmacPs_PhyRead(&xemacps->emacps, MIC_PHY_ADDR, phy_reg, &phy_value) == XST_SUCCESS) {
+            xil_printf("MIC_PHY3_REG%u=0x%04x\r\n",
+                (unsigned)phy_reg, (unsigned)phy_value);
+        } else {
+            xil_printf("MIC_PHY3_REG%u=READ_FAIL\r\n", (unsigned)phy_reg);
+        }
+        }
+    }
     netif_set_default(echo_netif);
+    platform_enable_interrupts();
     netif_set_up(echo_netif);
     netif_set_link_up(echo_netif);
-    platform_enable_interrupts();
     mic_udp = udp_new();
     if (mic_udp == NULL) {
         xil_printf("MIC_UDP_PCB_FAIL\r\n");
@@ -168,13 +489,54 @@ int main(void)
     xil_printf("MIC_SOURCE=PHYSICAL_I2S_BCK_HZ=3125000_WS_HZ=48828\r\n");
     init_platform();
     if (!network_init()) return XST_FAILURE;
-    if (!send_heartbeat()) return XST_FAILURE;
-    xil_printf("MIC_UDP_HEARTBEAT_SENT\r\n");
-    /* Allow the first ARP exchange to complete before the bounded PCM burst. */
-    for (uint32_t warmup = 0; warmup < 2000U; ++warmup) {
+    gem_tx_diag("POST_INIT");
+    gem_tx_ring_state("POST_INIT");
+    xil_printf("MIC_PHY_LOCAL_LOOPBACK_SKIPPED_STABLE_RUN\r\n");
+    print_rx_diag("POST_INIT");
+    {
+        err_t arp_error = etharp_request(echo_netif,
+            (const ip4_addr_t *)&host_ip);
+        xil_printf("MIC_ARP_REQUEST_ERR err=%d\r\n", (int)arp_error);
+        gem_tx_diag("ARP_AFTER");
+        gem_tx_ring_state("ARP_AFTER");
+    }
+    if (!send_raw_arp_request())
+        xil_printf("MIC_RAW_ARP_SEND_FAIL\r\n");
+    if (!send_raw_broadcast()) {
+        xil_printf("MIC_RAW_L2_SEND_FAIL\r\n");
+    }
+    xil_printf("MIC_DYNAMIC_ARP_WAIT_BEGIN\r\n");
+    for (uint32_t warmup = 0; warmup < 3000U; ++warmup) {
         service_network();
         usleep(1000U);
     }
+    print_rx_diag("DYNAMIC_ARP_WAIT");
+    print_arp_entry();
+    {
+        struct eth_addr host_eth;
+        err_t static_error;
+        host_eth.addr[0] = MIC_HOST_MAC0; host_eth.addr[1] = MIC_HOST_MAC1;
+        host_eth.addr[2] = MIC_HOST_MAC2; host_eth.addr[3] = MIC_HOST_MAC3;
+        host_eth.addr[4] = MIC_HOST_MAC4; host_eth.addr[5] = MIC_HOST_MAC5;
+        static_error = etharp_add_static_entry((const ip4_addr_t *)&host_ip, &host_eth);
+        xil_printf("MIC_ARP_STATIC_ADD_ERR err=%d MAC=%02x:%02x:%02x:%02x:%02x:%02x\r\n",
+            (int)static_error, host_eth.addr[0], host_eth.addr[1], host_eth.addr[2],
+            host_eth.addr[3], host_eth.addr[4], host_eth.addr[5]);
+        print_arp_entry();
+    }
+    for (uint32_t heartbeat = 0; heartbeat < 20U; ++heartbeat) {
+        int ok = send_heartbeat();
+        xil_printf("MIC_STATIC_HEARTBEAT index=%u ok=%u\r\n", (unsigned)heartbeat, (unsigned)ok);
+        service_network();
+        usleep(100000U);
+    }
+    print_rx_diag("STATIC_HEARTBEAT_DONE");
+    for (uint32_t raw_index = 0; raw_index < 10U; ++raw_index) {
+        (void)send_raw_ipv4_udp(raw_index);
+        service_network();
+        usleep(100000U);
+    }
+    print_rx_diag("RAW_UDP_DONE");
     if (!mic_layout_slots(XPAR_PS7_DDR_0_S_AXI_BASEADDR,
             XPAR_PS7_DDR_0_S_AXI_HIGHADDR, slots)) return XST_FAILURE;
     xil_printf("MIC_BEFORE_DMA_LOOKUP\r\n");
@@ -229,6 +591,9 @@ int main(void)
                     (unsigned long)frame, (unsigned long)part);
                 return XST_FAILURE;
             }
+            /* Keep the host-side bounded receiver below its Windows UDP
+             * socket burst limit while preserving the wire protocol. */
+            usleep(1000U);
         }
         if ((frame % 256U) == 0U) {
             xil_printf("MIC_UDP_PCM_SENT frame=%lu seq=%lu\r\n",

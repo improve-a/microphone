@@ -1,0 +1,9 @@
+{
+  "Name": "以太网 3",
+  "ReceivedBytes": 70533466,
+  "ReceivedUnicastPackets": 94685,
+  "ReceivedBroadcastPackets": 20,
+  "ReceivedMulticastPackets": 0,
+  "ReceivedDiscardedPackets": 0,
+  "ReceivedPacketErrors": 0
+}

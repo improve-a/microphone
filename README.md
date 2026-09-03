@@ -23,12 +23,18 @@ scripts\capture_uart.ps1 -Port COM4
 matlab -batch "cd('D:/microphone'); addpath('matlab'); live_mic_receiver('LocalPort',45123)"
 ```
 
-The current direct-link defaults use the Windows adapter's observed
-`169.254.248.53/16` address. Start the receiver before programming the board:
+The stable physical link uses 100 Mbps full duplex: board `192.168.1.10/24`
+to Windows adapter `以太网 3` at `192.168.1.2/24` (ifIndex 17), with UDP
+port `45123`. Start the receiver before programming the board:
 
 ```powershell
-D:\python3.12.3\python.exe scripts\udp_capture.py --seconds 14 --output evidence/physical/udp_capture
+D:\python3.12.3\python.exe scripts\udp_capture.py --bind 0.0.0.0 --port 45123 --seconds 150 --output evidence/physical/udp_capture
 ```
+
+The complete 100M physical evidence, including UART/XSCT logs, adapter
+counter deltas, raw packet capture, Python validation, and MATLAB `udpport`
+live capture is summarized in
+[`docs/physical_evidence_20260903.md`](docs/physical_evidence_20260903.md).
 
 ## Offline regression
 

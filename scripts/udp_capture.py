@@ -31,12 +31,17 @@ def main() -> int:
     stats_path = args.output / "udp_stats.json"
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # The board can legally emit back-to-back MTU datagrams; enlarge the
+    # Windows receive queue so evidence reflects wire loss, not a tiny socket
+    # buffer.
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8 * 1024 * 1024)
     sock.bind((args.bind, args.port))
     sock.settimeout(0.1)
     deadline = time.monotonic() + args.seconds
     raw: list[bytes] = []
     pcm: list[bytes] = []
     heartbeats: list[int] = []
+    raw_udp = 0
     sequences: list[int] = []
     malformed = crc_errors = valid_samples = nonzero_samples = 0
     while time.monotonic() < deadline:
@@ -48,6 +53,9 @@ def main() -> int:
         match = re.fullmatch(rb"MIC_HEARTBEAT seq=(\d+)\n", data)
         if match:
             heartbeats.append(int(match.group(1)))
+            continue
+        if b"MIC_RAW_UDP_UNIQUE_20260903" in data:
+            raw_udp += 1
             continue
         try:
             header, matrix = parse_packet(data)
@@ -81,6 +89,9 @@ def main() -> int:
         "heartbeats": len(heartbeats),
         "heartbeat_sequences": heartbeats,
         "pcm_packets": len(pcm),
+        "raw_udp_diagnostic_packets": raw_udp,
+        "expected_pcm_packets": 8192,
+        "pcm_complete": len(pcm) == 8192 and malformed == 0 and missing == 0 and late == 0,
         "pcm_first_sequence": sequences[0] if sequences else None,
         "pcm_last_sequence": sequences[-1] if sequences else None,
         "sequence_gaps": missing,
@@ -95,7 +106,7 @@ def main() -> int:
     }
     stats_path.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(stats, indent=2))
-    return 0 if heartbeats and pcm and malformed == 0 else 2
+    return 0 if heartbeats and len(pcm) == 8192 and malformed == 0 and missing == 0 and late == 0 else 2
 
 
 if __name__ == "__main__":

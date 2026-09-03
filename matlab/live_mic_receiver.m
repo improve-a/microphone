@@ -15,7 +15,8 @@ u = udpport('datagram', 'IPV4', 'LocalPort', opts.LocalPort, 'Timeout', 0.1);
 cleanup = onCleanup(@()clear('u'));
 datagrams = {};
 stats = struct('received', 0, 'missing', 0, 'duplicates', 0, ...
-    'malformed', 0, 'crc_errors', 0, 'heartbeats', 0, 'last_sequence', []);
+    'malformed', 0, 'crc_errors', 0, 'heartbeats', 0, ...
+    'raw_udp_diagnostics', 0, 'pcm_packets', 0, 'last_sequence', []);
 fig = []; ax = []; lines = [];
 history = zeros(opts.FrameSamples, opts.Channels);
 fs = 48828;
@@ -41,8 +42,13 @@ while toc(deadline) < opts.Seconds
         stats.heartbeats = stats.heartbeats + 1;
         continue;
     end
+    if contains(char(bytes.'), 'MIC_RAW_UDP_UNIQUE_20260903')
+        stats.raw_udp_diagnostics = stats.raw_udp_diagnostics + 1;
+        continue;
+    end
     try
         [header, pcm] = parse_mic_udp_packet(bytes);
+        stats.pcm_packets = stats.pcm_packets + 1;
         seq = uint32(header.packet_sequence);
         if isempty(expected), expected = seq; end
         if seq < expected, stats.duplicates = stats.duplicates + 1; end
