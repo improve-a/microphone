@@ -14,7 +14,18 @@ bitstream was downloaded through the volatile JTAG path, `ps7_init` and
 `ps7_post_config` completed, and XSCT exited before any GPIO/DMA access or ELF
 download. The earlier APU/DAP failure logs remain in the same evidence tree.
 
-Hardware LED observation status: awaiting operator report.
+Hardware LED observation (operator report):
+
+```text
+LED1: blinking
+LED2: off
+LED3: off
+LED4: on
+```
+
+Interpretation with active-low outputs: FCLK0 is running and
+`FCLK_RESET0_N=1` is released, while both `interconnect_aresetn` and
+`peripheral_aresetn` remain asserted low.
 
 Required observation fields after APU/DAP recovery:
 

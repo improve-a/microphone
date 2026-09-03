@@ -111,6 +111,10 @@ assign_bd_address -target_address_space [get_bd_addr_spaces $dma/Data_S2MM] \
     [get_bd_addr_segs $ps/S_AXI_HP0/HP0_DDR_LOWOCM]
 
 validate_bd_design
+set ext_reset_high [get_property CONFIG.C_EXT_RESET_HIGH $rst]
+if {$ext_reset_high ne "1"} {
+    error "proc_sys_reset ext_reset polarity must be active high after reset adapter metadata; actual $ext_reset_high"
+}
 
 # Machine assertions copied from the validated M2 DMA/DDR topology.
 foreach {prop expected} {
@@ -178,6 +182,7 @@ foreach {pin label} [list \
     if {[llength $nets] != 1} { error "$label interface net count expected 1: $nets" }
 }
 puts "MIC_M2_CLOCK_RESET_ASSERT_PASS"
+puts "MIC_PROC_SYS_RESET_EXT_ACTIVE_HIGH_ASSERT_PASS"
 puts "MIC_M2_DMA_CONFIG_ASSERT_PASS"
 puts "MIC_M2_ADDRESS_ASSERT_PASS DMA=$dma_offset RANGE=$dma_range"
 save_bd_design
