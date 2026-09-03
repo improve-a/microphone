@@ -9,10 +9,12 @@ Expected active-low mapping from the AX7Z020 user manual (p.37):
 - LED3 / J18: `~peripheral_aresetn`, should be on when reset is released.
 - LED4 / H18: `~fclk_reset0_n`, should be on when FCLK reset is released.
 
-Hardware observation status: pending. The 2026-09-03 volatile XSCT attempts
-could enumerate `xc7z020` but failed to enumerate the APU/DAP (`AP transaction
-error`, DAP status `30000021`). They therefore stopped before `rst -system` and
-before bitstream download; no LED state was observed in this session.
+Hardware download status: complete in the post-reboot retry. The new
+bitstream was downloaded through the volatile JTAG path, `ps7_init` and
+`ps7_post_config` completed, and XSCT exited before any GPIO/DMA access or ELF
+download. The earlier APU/DAP failure logs remain in the same evidence tree.
+
+Hardware LED observation status: awaiting operator report.
 
 Required observation fields after APU/DAP recovery:
 
