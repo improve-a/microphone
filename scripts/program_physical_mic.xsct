@@ -1,0 +1,133 @@
+# Volatile-only AX7Z020 programming and PS7 clock initialization.
+set observe_only 0
+if {[info exists ::env(MIC_OBSERVE_ONLY)] && $::env(MIC_OBSERVE_ONLY) eq "1"} {
+    set observe_only 1
+}
+foreach var {MIC_BITFILE MIC_INIT_TCL} {
+    if {![info exists ::env($var)] || $::env($var) eq ""} { error "$var is required" }
+    if {![file exists [file normalize $::env($var)]]} { error "$var file missing: $::env($var)" }
+}
+if {!$observe_only && (![info exists ::env(MIC_ELF)] || $::env(MIC_ELF) eq "")} {
+    error "MIC_ELF is required unless MIC_OBSERVE_ONLY=1"
+}
+set bitfile [file normalize $::env(MIC_BITFILE)]
+set init_tcl [file normalize $::env(MIC_INIT_TCL)]
+set elf ""
+if {[info exists ::env(MIC_ELF)] && $::env(MIC_ELF) ne ""} { set elf [file normalize $::env(MIC_ELF)] }
+if {!$observe_only && ![file exists $elf]} { error "MIC_ELF file missing: $elf" }
+
+# Keep each probe as a separate DAP transaction.  The register names and
+# addresses are taken from the generated ps7_init.tcl and Zynq-7000 SLCR map:
+# FPGA0_CLK_CTRL (0xF8000170), PLL_STATUS (0xF800010C),
+# PSS_RST_CTRL (0xF8000200), FPGA_RST_CTRL (0xF8000240).
+proc mic_probe_mrd {label address {dma_probe 0}} {
+    puts "MIC_PRE_ELF_READ_BEGIN $label ADDRESS=$address"
+    # -force is required for PL AXI addresses not present in XSCT's default
+    # PS memory map; it still performs a real DAP read on the target.
+    if {[catch {set value [mrd -force $address]} err]} {
+        puts "MIC_PRE_ELF_READ_ERROR $label ERROR=$err"
+        if {$dma_probe} {
+            puts "MIC_DMA_AXIL_PRE_ELF_READ_HANG"
+            error "DMA AXI-Lite pre-ELF probe failed at $address"
+        }
+        return 0
+    }
+    puts "MIC_PRE_ELF_READ_RESULT $label VALUE=$value"
+    return 1
+}
+
+proc mic_read_slcr_value {label address} {
+    puts "MIC_SLCR_READ_BEGIN $label ADDRESS=$address"
+    if {[catch {set value [mrd -force $address]} err]} {
+        puts "MIC_SLCR_READ_ERROR $label ERROR=$err"
+        return ""
+    }
+    puts "MIC_SLCR_READ_RESULT $label VALUE=$value"
+    if {[regexp -nocase {:\s*([0-9a-f]{1,8})} $value -> hex]} {
+        scan $hex %x parsed
+        return $parsed
+    }
+    return ""
+}
+
+connect
+puts "MIC_JTAG_TARGETS_BEGIN"
+puts [targets]
+targets -set -nocase -filter {name =~ "APU"}
+rst -system
+after 1000
+targets -set -nocase -filter {name =~ "xc7z020"}
+fpga -file $bitfile
+puts "MIC_BITSTREAM_VOLATILE_PROGRAM_PASS"
+after 500
+targets -set -nocase -filter {name =~ "ARM Cortex-A9 MPCore #0"}
+if {[catch {stop} stop_error]} { puts "MIC_CPU_PREINIT_STOP_RESULT=$stop_error" }
+
+set init_contents [read [open $init_tcl r]]
+if {[regexp -nocase {mask_write\s+0[xX]F8000900\s+0[xX]0000000F\s+0[xX]0000000F} $init_contents]} {
+    puts "MIC_PS7_POST_CONFIG_LVL_SHFTR_WRITE_PRESENT=1"
+} else {
+    puts "MIC_PS7_POST_CONFIG_LVL_SHFTR_WRITE_PRESENT=0"
+}
+source $init_tcl
+ps7_init
+set mic_silicon_version [ps_version]
+puts "MIC_PS7_POST_CONFIG_SILICON_VERSION=$mic_silicon_version"
+ps7_post_config
+puts "MIC_PS7_INIT_PASS"
+puts "MIC_JTAG_TARGETS_AFTER_PS7_BEGIN"
+puts [targets]
+
+# CPU is stopped here: prove level shifters and the GP0-to-DMA path before ELF.
+puts "MIC_PRE_ELF_MMIO_PROBE_BEGIN"
+set lvl [mic_read_slcr_value LVL_SHFTR_EN 0xF8000900]
+if {$lvl eq ""} { set lvl 0 }
+puts "MIC_LVL_SHFTR_EN_VALUE=[format 0x%08X $lvl]"
+set fpga_clk [mic_read_slcr_value FPGA0_CLK_CTRL 0xF8000170]
+if {$fpga_clk eq ""} { set fpga_clk 0 }
+puts "MIC_FPGA0_CLK_CTRL_VALUE=[format 0x%08X $fpga_clk]"
+set fpga_rst [mic_read_slcr_value FPGA_RST_CTRL 0xF8000240]
+if {$fpga_rst eq ""} { set fpga_rst 0 }
+puts "MIC_FPGA_RST_CTRL_VALUE=[format 0x%08X $fpga_rst]"
+if {$lvl ne "" && $lvl != 0xF} {
+    puts "MIC_PS_PL_LEVEL_SHIFTERS_REPAIR_BEGIN"
+    mwr -force 0xF8000008 0x0000DF0D
+    mask_write 0xF8000900 0x0000000F 0x0000000F
+    mask_write 0xF8000240 0x0000000F 0x00000000
+    mwr -force 0xF8000004 0x0000767B
+    set lvl [mic_read_slcr_value LVL_SHFTR_EN_AFTER_REPAIR 0xF8000900]
+    set fpga_rst [mic_read_slcr_value FPGA_RST_CTRL_AFTER_REPAIR 0xF8000240]
+    if {$lvl eq ""} { set lvl 0 }
+    if {$fpga_rst eq ""} { set fpga_rst 0 }
+    puts "MIC_LVL_SHFTR_EN_VALUE_AFTER_REPAIR=[format 0x%08X $lvl]"
+    puts "MIC_FPGA_RST_CTRL_VALUE_AFTER_REPAIR=[format 0x%08X $fpga_rst]"
+    if {$lvl == 0xF && $fpga_rst == 0} { puts "MIC_PS_PL_LEVEL_SHIFTERS_ENABLED" }
+} elseif {$lvl == 0xF} {
+    puts "MIC_PS_PL_LEVEL_SHIFTERS_ENABLED"
+}
+if {$observe_only} {
+    puts "MIC_RUNTIME_LED_OBSERVE_ONLY"
+    puts "MIC_RUNTIME_LED_OBSERVE_READY"
+    disconnect
+    exit 0
+}
+puts "MIC_PRE_ELF_MMIO_PROBE_BEGIN_GP0"
+if {[mic_probe_mrd GPIO_DIAGNOSTIC_DATA 0x41200000]} { puts "MIC_GP0_GPIO_PHYSICAL_PASS" }
+if {[mic_probe_mrd DMA_S2MM_DMACR 0x40400030 1]} {
+    if {[mic_probe_mrd DMA_S2MM_DMASR 0x40400034 1]} {
+        puts "MIC_DMA_AXIL_PRE_ELF_PHYSICAL_PASS"
+    }
+}
+mic_probe_mrd DDR_KNOWN_SAFE 0x00100000
+puts "MIC_PRE_ELF_MMIO_PROBE_END"
+
+dow $elf
+puts "MIC_ELF_DOWNLOAD_PASS"
+after 2000
+if {[catch {con} run_error]} { puts "MIC_CPU_RUN_RESULT=$run_error" }
+after 1000
+puts "MIC_CPU_STATUS=[state]"
+puts "MIC_CPU_PC=[rrd pc]"
+puts "MIC_PS7_ELF_PHYSICAL_PASS"
+disconnect
+exit 0

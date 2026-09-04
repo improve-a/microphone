@@ -1,0 +1,20 @@
+{
+  "duration_seconds": 3.0,
+  "datagrams": 1,
+  "heartbeats": 1,
+  "heartbeat_sequences": [
+    99
+  ],
+  "pcm_packets": 0,
+  "pcm_first_sequence": null,
+  "pcm_last_sequence": null,
+  "sequence_gaps": 0,
+  "duplicates": 0,
+  "late_or_out_of_order": 0,
+  "malformed": 0,
+  "crc_errors": 0,
+  "valid_pcm_samples": 0,
+  "nonzero_pcm_samples": 0,
+  "raw_capture": "D:\\microphone\\evidence\\physical\\host_udp_selftest\\udp_capture\\udp_raw_capture.bin",
+  "pcm_capture": "D:\\microphone\\evidence\\physical\\host_udp_selftest\\udp_capture\\mic_packets.bin"
+}

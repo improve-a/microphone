@@ -1,0 +1,82 @@
+[
+  {
+    "path": "live_capture.mat",
+    "bytes": 85519044,
+    "sha256": "80C38785211D584D98DB97280FFACE727410F03C5284E7523FB1D0BA43D66AD4"
+  },
+  {
+    "path": "uart.log",
+    "bytes": 24964,
+    "sha256": "D644D24EE747392D7D9ECBB234A09EF5232881E344115B5F3609EBA166481EC1"
+  },
+  {
+    "path": "xsct.log",
+    "bytes": 7100,
+    "sha256": "2916AD2ED39F4CF10CC427B4681D39E7774B1466CB229E7C6462DCB30E48A440"
+  },
+  {
+    "path": "matlab_console.log",
+    "bytes": 290,
+    "sha256": "81D4DF6CFACAF485071C71B1F5E33889C34A44B87F575C2B689C296E876B40F8"
+  },
+  {
+    "path": "waveform.png",
+    "bytes": 64940,
+    "sha256": "8E5F70AFC45430BB4838616CE5C73082B20EB2046482B0151807E7743987E0DA"
+  },
+  {
+    "path": "spectrum.png",
+    "bytes": 24944,
+    "sha256": "44B4094CB8376DD38E0C10CB827C6E38751BD857A3F002771584B0DE022EE6C4"
+  },
+  {
+    "path": "rms_envelope.png",
+    "bytes": 82129,
+    "sha256": "01A2A5F9E7810651F8DC1F1406BCFFE4465B39D77EE8E9795989FAE43D202787"
+  },
+  {
+    "path": "offline_python_tests.log",
+    "bytes": 1584,
+    "sha256": "87FDC3DBE4BE2202E058F3E4FD09C3ECDBEB71F1CBE1A760D4FA505BC7B592D4"
+  },
+  {
+    "path": "host_c_test.log",
+    "bytes": 24,
+    "sha256": "28578A6760AFDE059733C13FD7260AA1EB1B2EDACEA2370CE1AC810767F55E8E"
+  },
+  {
+    "path": "offline_matlab_tests.log",
+    "bytes": 44,
+    "sha256": "67F7ED1BEC768281ADAF0353F97B23EE10F315BBAF9DC9E871730AFB61AB9DFE"
+  },
+  {
+    "path": "tone_analysis\\controlled_tone_excerpt.mat",
+    "bytes": 9506331,
+    "sha256": "5A5B9617C91397DCD7ADA479D4B03580597C35F48DA4A750C16A79A84D9805DB"
+  },
+  {
+    "path": "tone_analysis\\tone_response.json",
+    "bytes": 12277,
+    "sha256": "FE17F102CF8E4C6CC7896156A4694A60B6950B496ACAB48454CA6D88CEC455C8"
+  },
+  {
+    "path": "tone_analysis\\udp_stats.json",
+    "bytes": 296,
+    "sha256": "BDE6672DCE090041E6EE619101B2184067C99FEA7D76B39D3E13E7A414967F90"
+  },
+  {
+    "path": "tone_analysis\\tone_response.png",
+    "bytes": 358108,
+    "sha256": "2FFA627123592F567DFCE472813C17E349C8D226C07F7EF401543FF44E2B4031"
+  },
+  {
+    "path": "tone_analysis\\tone_spectrum.png",
+    "bytes": 382992,
+    "sha256": "7FE5F683D58CC25676CA18A1BF688B691338400B3BE149FDB28B05014DEF46C4"
+  },
+  {
+    "path": "tone_analysis\\left_right_rms.png",
+    "bytes": 33921,
+    "sha256": "3D91B8A3943A8AD558B034DE547C263A2EE869C52EEFCF9445BC5790B82C30A6"
+  }
+]

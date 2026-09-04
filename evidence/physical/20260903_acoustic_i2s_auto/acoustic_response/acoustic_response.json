@@ -1,0 +1,188 @@
+{
+  "mat": "D:\\microphone\\evidence\\physical\\20260903_acoustic_i2s_auto\\live_capture.mat",
+  "channels": 8,
+  "samples_per_channel": 1363840,
+  "sample_rate_hz": 48828.0,
+  "duration_seconds": 27.931514704677642,
+  "baseline_rms": [
+    23156.763933747592,
+    23154.55515616403,
+    23177.807920626423,
+    23171.47255570587,
+    23164.38058861129,
+    23160.023020522214,
+    23216.294152418624,
+    0.006255132566870078
+  ],
+  "aggregate_peak_count": 0,
+  "aggregate_peak_times_s": [],
+  "aggregate_peak_ratios": [],
+  "channel_peaks": [
+    {
+      "channel": 1,
+      "peak_count": 0,
+      "peak_times_s": []
+    },
+    {
+      "channel": 2,
+      "peak_count": 0,
+      "peak_times_s": []
+    },
+    {
+      "channel": 3,
+      "peak_count": 0,
+      "peak_times_s": []
+    },
+    {
+      "channel": 4,
+      "peak_count": 0,
+      "peak_times_s": []
+    },
+    {
+      "channel": 5,
+      "peak_count": 0,
+      "peak_times_s": []
+    },
+    {
+      "channel": 6,
+      "peak_count": 0,
+      "peak_times_s": []
+    },
+    {
+      "channel": 7,
+      "peak_count": 0,
+      "peak_times_s": []
+    },
+    {
+      "channel": 8,
+      "peak_count": 0,
+      "peak_times_s": []
+    }
+  ],
+  "metrics": [
+    {
+      "channel": 1,
+      "min": -32768.0,
+      "max": 32767.0,
+      "mean": 45.455207355701546,
+      "rms": 23151.636829671235,
+      "std": 23151.63682965243,
+      "peak_to_peak": 65535.0,
+      "nonzero_ratio": 0.959500381276396,
+      "baseline_short_rms": 23156.763933747592,
+      "peak_short_rms": 24562.870563320783,
+      "peak_to_baseline": 1.060721205847074,
+      "peak_db": 0.5120250263275081
+    },
+    {
+      "channel": 2,
+      "min": -32768.0,
+      "max": 32767.0,
+      "mean": 66.31127918230878,
+      "rms": 23148.52242896514,
+      "std": 23148.52242899474,
+      "peak_to_peak": 65535.0,
+      "nonzero_ratio": 0.9577949026278743,
+      "baseline_short_rms": 23154.55515616403,
+      "peak_short_rms": 24441.98779689718,
+      "peak_to_baseline": 1.0556017004883127,
+      "peak_db": 0.47000162323185773
+    },
+    {
+      "channel": 3,
+      "min": -32768.0,
+      "max": 32767.0,
+      "mean": 254.7406037365087,
+      "rms": 23137.96548806619,
+      "std": 23137.965488071553,
+      "peak_to_peak": 65535.0,
+      "nonzero_ratio": 0.9510059831065227,
+      "baseline_short_rms": 23177.807920626423,
+      "peak_short_rms": 24349.98023455005,
+      "peak_to_baseline": 1.050573044609645,
+      "peak_db": 0.4285250714040473
+    },
+    {
+      "channel": 4,
+      "min": -32768.0,
+      "max": 32767.0,
+      "mean": 108.95360379516659,
+      "rms": 23148.30373808234,
+      "std": 23148.30373807221,
+      "peak_to_peak": 65535.0,
+      "nonzero_ratio": 0.9589152686532144,
+      "baseline_short_rms": 23171.47255570587,
+      "peak_short_rms": 24397.661692781043,
+      "peak_to_baseline": 1.0529180497323736,
+      "peak_db": 0.4478914135669209
+    },
+    {
+      "channel": 5,
+      "min": -32768.0,
+      "max": 32767.0,
+      "mean": 46.86922952839043,
+      "rms": 23154.014909612473,
+      "std": 23154.014909575348,
+      "peak_to_peak": 65535.0,
+      "nonzero_ratio": 0.9629575316752699,
+      "baseline_short_rms": 23164.38058861129,
+      "peak_short_rms": 24573.409442543216,
+      "peak_to_baseline": 1.0608273918027695,
+      "peak_db": 0.5128945039289876
+    },
+    {
+      "channel": 6,
+      "min": -32768.0,
+      "max": 32767.0,
+      "mean": 328.61871847137496,
+      "rms": 23165.379538482746,
+      "std": 23165.37953849628,
+      "peak_to_peak": 65535.0,
+      "nonzero_ratio": 0.955036514547161,
+      "baseline_short_rms": 23160.023020522214,
+      "peak_short_rms": 24417.70554542831,
+      "peak_to_baseline": 1.0543040274092845,
+      "peak_db": 0.4593173102571891
+    },
+    {
+      "channel": 7,
+      "min": -32768.0,
+      "max": 32767.0,
+      "mean": 165.09944055021117,
+      "rms": 23151.912661943075,
+      "std": 23151.912661957744,
+      "peak_to_peak": 65535.0,
+      "nonzero_ratio": 0.9632662189113093,
+      "baseline_short_rms": 23216.294152418624,
+      "peak_short_rms": 24386.657535500508,
+      "peak_to_baseline": 1.0504112919744324,
+      "peak_db": 0.4271876358825777
+    },
+    {
+      "channel": 8,
+      "min": -8531.0,
+      "max": 0.0,
+      "mean": -0.006255132566870014,
+      "rms": 7.30496384693656,
+      "std": 7.304963846678824,
+      "peak_to_peak": 8531.0,
+      "nonzero_ratio": 7.332238385734397e-07,
+      "baseline_short_rms": 0.006255132566870078,
+      "peak_short_rms": 266.59355460042445,
+      "peak_to_baseline": 266.59355460042445,
+      "peak_db": 48.516992906409996
+    }
+  ],
+  "ch8_to_real_rms_ratio": 0.0003155268848021358,
+  "clipping": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    false
+  ],
+  "acoustic_pass": false
+}

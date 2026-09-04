@@ -1,12 +1,37 @@
-set script_dir [file dirname [file normalize [info script]]]
+set script_path [file normalize [info script]]
+set script_dir [file dirname $script_path]
 set repo_dir [file dirname $script_dir]
 set build_root [file join $script_dir build rtl_tests]
 file mkdir $build_root
 
-proc run_test {repo_dir build_root top pass_token final_test sources} {
+proc test_sources {top} {
+    switch -- $top {
+        tb_pcm_synthetic_source {
+            return [list rtl/pcm_synthetic_source.sv tb/tb_pcm_synthetic_source.sv]
+        }
+        tb_pcm_axis_packer {
+            return [list rtl/pcm_axis_packer.sv tb/tb_pcm_axis_packer.sv]
+        }
+        tb_lc_ai_k210_7mic_frontend {
+            return [list rtl/lc_ai_k210_7mic_frontend.sv tb/tb_lc_ai_k210_7mic_frontend.sv]
+        }
+        default { error "unknown RTL test top: $top" }
+    }
+}
+
+proc test_token {top} {
+    switch -- $top {
+        tb_pcm_synthetic_source { return MIC_FRONTEND_RTL_PASS }
+        tb_pcm_axis_packer { return MIC_PACKER_RTL_PASS }
+        tb_lc_ai_k210_7mic_frontend { return MIC_I2S_SCALE_RTL_PASS }
+        default { error "unknown RTL test top: $top" }
+    }
+}
+
+proc run_one {repo_dir build_root top} {
     set project_dir [file join $build_root $top]
     create_project -force $top $project_dir -part xc7z020clg400-2
-    foreach source $sources {
+    foreach source [test_sources $top] {
         add_files -norecurse [file join $repo_dir $source]
     }
     set_property top $top [get_filesets sim_1]
@@ -14,35 +39,35 @@ proc run_test {repo_dir build_root top pass_token final_test sources} {
     update_compile_order -fileset sim_1
     launch_simulation
     run all
-    if {$final_test} {
-        after 1000
-    } else {
-        close_sim
+    after 1000
+    puts "RTL_CHILD_COMPLETE top=$top"
+}
+
+# Vivado 2019.1 can hang in close_sim after a finished xsim session. Run each
+# test in a child Vivado process so normal process teardown closes the simulator.
+if {$argc == 1} {
+    run_one $repo_dir $build_root [lindex $argv 0]
+    exit 0
+}
+
+set vivado [info nameofexecutable]
+foreach top {tb_pcm_synthetic_source tb_pcm_axis_packer tb_lc_ai_k210_7mic_frontend} {
+    if {[catch {
+        exec $vivado -mode batch -nolog -nojournal -source $script_path -tclargs $top 2>@1
+    } output]} {
+        puts $output
+        error "RTL child test failed: $top"
     }
-    set sim_log [file join $project_dir "$top.sim" sim_1 behav xsim simulate.log]
-    if {![file exists $sim_log]} {
-        error "simulation log missing for $top"
+    puts $output
+    set pass_token [test_token $top]
+    if {[string first $pass_token $output] < 0 ||
+        [string first "RTL_CHILD_COMPLETE top=$top" $output] < 0} {
+        error "$top did not emit required completion tokens"
     }
-    set handle [open $sim_log r]
-    set contents [read $handle]
-    close $handle
-    if {!$final_test} { close_project }
-    if {[string first $pass_token $contents] < 0} {
-        error "$top did not emit required token $pass_token"
-    }
-    if {[regexp {Fatal:|_FAIL|\mERROR\M} $contents]} {
-        error "$top simulation log contains a failure marker"
+    if {[regexp {Fatal:|_FAIL|\mERROR\M} $output]} {
+        error "$top output contains a failure marker"
     }
     puts "RTL_TEST_PASS top=$top"
 }
-
-run_test $repo_dir $build_root tb_pcm_synthetic_source MIC_FRONTEND_RTL_PASS false [list \
-    rtl/pcm_synthetic_source.sv \
-    tb/tb_pcm_synthetic_source.sv]
-
-run_test $repo_dir $build_root tb_pcm_axis_packer MIC_PACKER_RTL_PASS true [list \
-    rtl/pcm_axis_packer.sv \
-    tb/tb_pcm_axis_packer.sv]
-
 puts "MIC_RTL_SUITE_PASS"
 exit 0

@@ -1,0 +1,113 @@
+attempting to launch hw_server
+
+****** Xilinx hw_server v2019.1
+  **** Build date : May 24 2019 at 15:13:31
+    ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+INFO: hw_server application started
+INFO: Use Ctrl-C to exit hw_server application
+
+
+
+****** Xilinx hw_server v2019.1
+
+  **** Build date : May 24 2019 at 15:13:31
+
+    ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+
+
+INFO: hw_server application started
+
+INFO: Use Ctrl-C to exit hw_server application
+
+
+
+
+INFO: To connect to this hw_server instance use url: TCP:127.0.0.1:3121
+
+
+
+MIC_JTAG_TARGETS_BEGIN
+  1  APU
+     2  ARM Cortex-A9 MPCore #0 (Running)
+     3  ARM Cortex-A9 MPCore #1 (Running)
+  4  xc7z020
+     5  Legacy Debug Hub
+
+initializing
+  0%    0MB   0.0MB/s  ??:?? ETA
+ 27%    1MB   2.1MB/s  ??:?? ETA
+ 49%    1MB   1.8MB/s  ??:?? ETA
+ 68%    2MB   1.7MB/s  ??:?? ETA
+ 94%    3MB   1.7MB/s  ??:?? ETA
+100%    3MB   1.8MB/s  00:02    
+MIC_BITSTREAM_VOLATILE_PROGRAM_PASS
+MIC_CPU_PREINIT_STOP_RESULT=Already stopped
+MIC_PS7_POST_CONFIG_LVL_SHFTR_WRITE_PRESENT=1
+MIC_PS7_POST_CONFIG_SILICON_VERSION=0x3
+MIC_PS7_INIT_PASS
+MIC_JTAG_TARGETS_AFTER_PS7_BEGIN
+  1  APU
+     2* ARM Cortex-A9 MPCore #0 (Suspended)
+     3  ARM Cortex-A9 MPCore #1 (Suspended)
+  4  xc7z020
+     5  Legacy Debug Hub
+MIC_PRE_ELF_MMIO_PROBE_BEGIN
+MIC_SLCR_READ_BEGIN LVL_SHFTR_EN ADDRESS=0xF8000900
+MIC_SLCR_READ_RESULT LVL_SHFTR_EN VALUE=F8000900:   0000000F
+
+MIC_LVL_SHFTR_EN_VALUE=0x0000000F
+MIC_SLCR_READ_BEGIN FPGA0_CLK_CTRL ADDRESS=0xF8000170
+MIC_SLCR_READ_RESULT FPGA0_CLK_CTRL VALUE=F8000170:   00400500
+
+MIC_FPGA0_CLK_CTRL_VALUE=0x00400500
+MIC_SLCR_READ_BEGIN FPGA_RST_CTRL ADDRESS=0xF8000240
+MIC_SLCR_READ_RESULT FPGA_RST_CTRL VALUE=F8000240:   00000000
+
+MIC_FPGA_RST_CTRL_VALUE=0x00000000
+MIC_PS_PL_LEVEL_SHIFTERS_ENABLED
+MIC_PRE_ELF_MMIO_PROBE_BEGIN_GP0
+MIC_PRE_ELF_READ_BEGIN GPIO_DIAGNOSTIC_DATA ADDRESS=0x41200000
+MIC_PRE_ELF_READ_RESULT GPIO_DIAGNOSTIC_DATA VALUE=41200000:   00000000
+
+MIC_GP0_GPIO_PHYSICAL_PASS
+MIC_PRE_ELF_READ_BEGIN DMA_S2MM_DMACR ADDRESS=0x40400030
+MIC_PRE_ELF_READ_RESULT DMA_S2MM_DMACR VALUE=40400030:   00010002
+
+MIC_PRE_ELF_READ_BEGIN DMA_S2MM_DMASR ADDRESS=0x40400034
+MIC_PRE_ELF_READ_RESULT DMA_S2MM_DMASR VALUE=40400034:   00000001
+
+MIC_DMA_AXIL_PRE_ELF_PHYSICAL_PASS
+MIC_PRE_ELF_READ_BEGIN DDR_KNOWN_SAFE ADDRESS=0x00100000
+MIC_PRE_ELF_READ_RESULT DDR_KNOWN_SAFE VALUE=  100000:   EA000049
+
+MIC_PRE_ELF_MMIO_PROBE_END
+
+Downloading Program -- D:/microphone/sw/build/sdk_workspace_100m_full3/mic_dma_app/Debug/mic_dma_app.elf
+	section, .text: 0x00100000 - 0x0011dadf
+	section, .init: 0x0011dae0 - 0x0011daeb
+	section, .fini: 0x0011daec - 0x0011daf7
+	section, .rodata: 0x0011daf8 - 0x0011f333
+	section, .data: 0x0011f338 - 0x001200d7
+	section, .eh_frame: 0x001200d8 - 0x001200db
+	section, .mmu_tbl: 0x00124000 - 0x00127fff
+	section, .ARM.exidx: 0x00128000 - 0x00128007
+	section, .init_array: 0x00128008 - 0x0012800b
+	section, .fini_array: 0x0012800c - 0x0012800f
+	section, .bss: 0x00200000 - 0x0040812f
+	section, .heap: 0x00408130 - 0x0060812f
+	section, .stack: 0x00608130 - 0x0060b92f
+
+  0%    0MB   0.0MB/s  ??:?? ETA
+100%    0MB   0.5MB/s  00:00    
+
+Setting PC to Program Start Address 0x00100000
+Successfully downloaded D:/microphone/sw/build/sdk_workspace_100m_full3/mic_dma_app/Debug/mic_dma_app.elf
+MIC_ELF_DOWNLOAD_PASS
+MIC_CPU_STATUS=Running
+MIC_CPU_PC=pc: 00107e88
+
+MIC_PS7_ELF_PHYSICAL_PASS
+MIC_PHYSICAL_BRINGUP_XSCT_LOG=D:\microphone\evidence\physical\20260903_matlab_live_plot_batch2\xsct.log
+MIC_PHYSICAL_BRINGUP_UART_LOG=D:\microphone\evidence\physical\20260903_matlab_live_plot_batch2\uart.log

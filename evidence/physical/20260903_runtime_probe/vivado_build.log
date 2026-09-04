@@ -1,0 +1,41 @@
+
+****** Vivado v2019.1 (64-bit)
+  **** SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+  **** IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+    ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+source {vivado\build_mic_dma.tcl}
+# set script_dir [file dirname [file normalize [info script]]]
+# set repo_dir [file dirname $script_dir]
+# set build_leaf mic_dma
+# if {[info exists ::env(MIC_VIVADO_BUILD_LEAF)] && $::env(MIC_VIVADO_BUILD_LEAF) ne ""} {
+#     set build_leaf $::env(MIC_VIVADO_BUILD_LEAF)
+# }
+# set build_dir [file join $script_dir build $build_leaf]
+# set report_dir [file join $repo_dir reports generated]
+# file mkdir $build_dir
+# file mkdir $report_dir
+# create_project -force mic_dma $build_dir -part xc7z020clg400-2
+create_project: Time (s): cpu = 00:00:02 ; elapsed = 00:00:07 . Memory (MB): peak = 357.867 ; gain = 73.555
+# set_property target_language Verilog [current_project]
+# add_files -norecurse [list \
+#     [file join $repo_dir rtl pcm_synthetic_source.sv] \
+#     [file join $repo_dir rtl lc_ai_k210_7mic_frontend.sv] \
+#     [file join $repo_dir rtl pcm_axis_packer.sv] \
+#     [file join $repo_dir rtl mic_dma_pipeline.sv] \
+#     [file join $repo_dir rtl mic_dma_pipeline_ref.v] \
+#     [file join $repo_dir rtl resetn_inverter.v] \
+#     [file join $repo_dir rtl pl_runtime_probe.sv]]
+# add_files -fileset constrs_1 -norecurse [file join $repo_dir vivado lc_ai_k210_7mic.xdc]
+# add_files -fileset constrs_1 -norecurse [file join $repo_dir vivado pl_runtime_probe.xdc]
+# set led_xdc [file join $repo_dir vivado pl_runtime_probe.xdc]
+# set led_fh [open $led_xdc r]
+# set led_text [read $led_fh]
+# close $led_fh
+wrong # args: should be "regexp ?switches? exp string ?matchVar? ?subMatchVar subMatchVar ...?"
+    while executing
+"regexp -all -inline {PACKAGE_PIN\s+([A-Z][0-9]+)\s+\[get_ports\s+\{([^}"
+    invoked from within
+"set led_pin_matches [regexp -all -inline {PACKAGE_PIN\s+([A-Z][0-9]+)\s+\[get_ports\s+\{([^}]+)\}\]} $led_text]"
+    (file "vivado\build_mic_dma.tcl" line 30)
+INFO: [Common 17-206] Exiting Vivado at Thu Sep  3 13:55:15 2026...

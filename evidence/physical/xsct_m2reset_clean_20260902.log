@@ -1,0 +1,48 @@
+MIC_JTAG_TARGETS_BEGIN
+  1  APU
+     2  ARM Cortex-A9 MPCore #0 (Running)
+     3  ARM Cortex-A9 MPCore #1 (Running)
+  4  xc7z020
+     5  Legacy Debug Hub
+
+initializing
+  0%    0MB   0.0MB/s  ??:?? ETA
+ 26%    1MB   2.0MB/s  ??:?? ETA
+ 49%    1MB   1.8MB/s  ??:?? ETA
+ 74%    2MB   1.8MB/s  ??:?? ETA
+ 94%    3MB   1.7MB/s  ??:?? ETA
+100%    3MB   1.8MB/s  00:02    
+MIC_BITSTREAM_VOLATILE_PROGRAM_PASS
+MIC_CPU_PREINIT_STOP_RESULT=Already stopped
+MIC_PS7_INIT_PASS
+MIC_JTAG_TARGETS_AFTER_PS7_BEGIN
+  1  APU
+     2* ARM Cortex-A9 MPCore #0 (Suspended)
+     3  ARM Cortex-A9 MPCore #1 (Suspended)
+  4  xc7z020
+     5  Legacy Debug Hub
+
+Downloading Program -- D:/microphone/sw/build/physical_mic_clean_20260902/mic_dma_app/Debug/mic_dma_app.elf
+	section, .text: 0x00100000 - 0x00106d6f
+	section, .init: 0x00106d70 - 0x00106d7b
+	section, .fini: 0x00106d7c - 0x00106d87
+	section, .rodata: 0x00106d88 - 0x001074f3
+	section, .data: 0x001074f8 - 0x00107f47
+	section, .eh_frame: 0x00107f48 - 0x00107f4b
+	section, .mmu_tbl: 0x00108000 - 0x0010bfff
+	section, .init_array: 0x0010c000 - 0x0010c003
+	section, .fini_array: 0x0010c004 - 0x0010c007
+	section, .bss: 0x0010c008 - 0x0010ca6b
+	section, .heap: 0x0010ca6c - 0x0010ea6f
+	section, .stack: 0x0010ea70 - 0x0011226f
+
+  0%    0MB   0.0MB/s  ??:?? ETA
+100%    0MB   0.5MB/s  00:00    
+
+Setting PC to Program Start Address 0x00100000
+Successfully downloaded D:/microphone/sw/build/physical_mic_clean_20260902/mic_dma_app/Debug/mic_dma_app.elf
+MIC_ELF_DOWNLOAD_PASS
+MIC_CPU_STATUS=Running
+MIC_CPU_PC=pc: 00101384
+
+MIC_PS7_ELF_PHYSICAL_PASS

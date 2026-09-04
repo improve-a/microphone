@@ -5,6 +5,7 @@ file mkdir $report_dir
 
 create_project -in_memory -part xc7z020clg400-2
 read_verilog -sv [file join $repo_dir rtl pcm_synthetic_source.sv]
+read_verilog -sv [file join $repo_dir rtl lc_ai_k210_7mic_frontend.sv]
 read_verilog -sv [file join $repo_dir rtl pcm_axis_packer.sv]
 read_verilog -sv [file join $repo_dir rtl mic_dma_pipeline.sv]
 synth_design -mode out_of_context -top mic_dma_pipeline -part xc7z020clg400-2

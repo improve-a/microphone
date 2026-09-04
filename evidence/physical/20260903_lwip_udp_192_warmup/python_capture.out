@@ -1,0 +1,18 @@
+{
+  "duration_seconds": 120.0,
+  "datagrams": 0,
+  "heartbeats": 0,
+  "heartbeat_sequences": [],
+  "pcm_packets": 0,
+  "pcm_first_sequence": null,
+  "pcm_last_sequence": null,
+  "sequence_gaps": 0,
+  "duplicates": 0,
+  "late_or_out_of_order": 0,
+  "malformed": 0,
+  "crc_errors": 0,
+  "valid_pcm_samples": 0,
+  "nonzero_pcm_samples": 0,
+  "raw_capture": "D:\\microphone\\evidence\\physical\\20260903_lwip_udp_192_warmup\\udp_capture\\udp_raw_capture.bin",
+  "pcm_capture": "D:\\microphone\\evidence\\physical\\20260903_lwip_udp_192_warmup\\udp_capture\\mic_packets.bin"
+}
