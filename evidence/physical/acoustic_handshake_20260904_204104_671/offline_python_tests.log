@@ -1,0 +1,17 @@
+test_channel_delay_and_amplitude (test_microphone_model.MicrophoneModelTests.test_channel_delay_and_amplitude) ... ok
+test_deterministic_pseudo_signal_and_seed (test_microphone_model.MicrophoneModelTests.test_deterministic_pseudo_signal_and_seed) ... ok
+test_even_dma_packing_little_endian (test_microphone_model.MicrophoneModelTests.test_even_dma_packing_little_endian) ... ok
+test_interleave_metadata_and_frame_boundary (test_microphone_model.MicrophoneModelTests.test_interleave_metadata_and_frame_boundary) ... ok
+test_odd_dma_packing_and_exact_byte_count (test_microphone_model.MicrophoneModelTests.test_odd_dma_packing_and_exact_byte_count) ... ok
+test_pcm16_signed_range (test_microphone_model.MicrophoneModelTests.test_pcm16_signed_range) ... ok
+test_known_channel_delay_recovery (test_udp_protocol.UdpProtocolTests.test_known_channel_delay_recovery) ... ok
+test_loss_duplicate_and_malformed_policy (test_udp_protocol.UdpProtocolTests.test_loss_duplicate_and_malformed_policy) ... ok
+test_malformed_crc_and_lengths_rejected (test_udp_protocol.UdpProtocolTests.test_malformed_crc_and_lengths_rejected) ... ok
+test_mtu_header_and_signed_recovery (test_udp_protocol.UdpProtocolTests.test_mtu_header_and_signed_recovery) ... ok
+test_packet_file_round_trip (test_udp_protocol.UdpProtocolTests.test_packet_file_round_trip) ... ok
+test_sequence_and_exact_matrix_reconstruction (test_udp_protocol.UdpProtocolTests.test_sequence_and_exact_matrix_reconstruction) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.157s
+
+OK

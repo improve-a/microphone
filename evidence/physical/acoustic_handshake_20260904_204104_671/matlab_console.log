@@ -1,0 +1,3 @@
+MIC_ACOUSTIC_ACTION_READY pcm_packets=100 datagrams=130
+MIC_MATLAB_STOP_FILE_DETECTED path=D:\microphone\evidence\physical\acoustic_handshake_20260904_204104_671\action_done.flag
+MIC_MATLAB_LIVE_CAPTURE received=95098 heartbeat=20 pcm=95068 missing=0 duplicates=0 malformed=0 crc=0 ready=1

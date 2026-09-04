@@ -11,6 +11,7 @@ addParameter(p, 'SampleRate', 48828, @(x)isscalar(x) && x > 0);
 addParameter(p, 'SaveFile', '', @(x)ischar(x) || isstring(x));
 addParameter(p, 'OutputDir', '', @(x)ischar(x) || isstring(x));
 addParameter(p, 'ReadyFile', '', @(x)ischar(x) || isstring(x));
+addParameter(p, 'StopFile', '', @(x)ischar(x) || isstring(x));
 addParameter(p, 'Plot', true, @(x)islogical(x) && isscalar(x));
 addParameter(p, 'MinReadyPcmPackets', 20, @(x)isscalar(x) && x > 0);
 parse(p, varargin{:}); opts = p.Results;
@@ -81,7 +82,13 @@ if opts.Plot
 end
 
 deadline = tic;
+fatal_error = [];
+try
 while toc(deadline) < opts.Seconds
+    if strlength(string(opts.StopFile)) > 0 && isfile(opts.StopFile)
+        fprintf('MIC_MATLAB_STOP_FILE_DETECTED path=%s\n', char(opts.StopFile));
+        break;
+    end
     if u.NumDatagramsAvailable == 0
         pause(0.01);
         continue;
@@ -184,6 +191,10 @@ while toc(deadline) < opts.Seconds
         end
     end
 end
+catch err
+    fatal_error = err;
+    fprintf('MIC_MATLAB_FATAL_ERROR %s\n', err.message);
+end
 
 if opts.Plot
     save_plot(wave_fig, opts.OutputDir, 'waveform.png');
@@ -201,6 +212,9 @@ end
 fprintf('MIC_MATLAB_LIVE_CAPTURE received=%d heartbeat=%d pcm=%d missing=%d duplicates=%d malformed=%d crc=%d ready=%d\n', ...
     stats.received, stats.heartbeats, stats.pcm_packets, stats.missing, ...
     stats.duplicates, stats.malformed, stats.crc_errors, stats.ready);
+if ~isempty(fatal_error)
+    rethrow(fatal_error);
+end
 end
 
 function recent = ordered_ring(ring, pos, count, capacity, channels)

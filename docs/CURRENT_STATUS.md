@@ -112,10 +112,21 @@ out-of-order errors, and complete DMA/UDP counters. Details and artifact hashes
 are in `docs/overnight_bringup_summary.md` and
 `docs/physical_evidence_20260903.md`.
 
-The following markers remain intentionally unrecorded because no controlled
-audible stimulus was used in the overnight run:
+## 2026-09-04 controlled acoustic acceptance
 
-`MIC_ACOUSTIC_1KHZ_PHYSICAL_PASS`, `MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS`, and
-`MIC_MATLAB_LIVE_PHYSICAL_PASS`. Run
-`powershell -NoProfile -ExecutionPolicy Bypass -File D:\microphone\scripts\run_morning_acoustic_test.ps1`
-for the remaining user-driven acoustic gate.
+The two-turn MATLAB/JTAG capture under
+`evidence/physical/acoustic_handshake_20260904_204104_671` received 95,068
+contiguous PCM packets with zero CRC, malformed, missing, duplicate,
+out-of-order, or frame-layout errors. It automatically found the requested
+left and right controlled-tone intervals at 46.5-53.5 s and 57.0-62.5 s.
+CH1-CH7 measured exactly 1000.0 Hz in both intervals, with RMS 21.30-36.63 dB
+above quiet and zero clipping. CH8 was identically zero in both clean tone
+plateaus. UART confirmed `MIC_SOURCE=PHYSICAL_I2S` and `PCM_RIGHT_SHIFT=8`.
+
+The final physical markers are now recorded:
+
+```
+MIC_ACOUSTIC_1KHZ_PHYSICAL_PASS
+MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS
+MIC_MATLAB_LIVE_PHYSICAL_PASS
+```

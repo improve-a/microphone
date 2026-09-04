@@ -78,7 +78,28 @@ were `ReceivedBytes=3,077,762,120` and `ReceivedUnicastPackets=4,122,030`,
 with zero packet errors; `udp_soak_stats.json` reports `pass=true`.
 
 These runs establish the bounded real-I2S Ethernet/UDP stability gates. They
-were intentionally silent and do not record any controlled acoustic or live
-MATLAB response PASS marker. The only remaining physical action is the
-morning controlled acoustic test using the one-command entry point in the
-overnight summary.
+were intentionally silent; the controlled acoustic and MATLAB-live markers
+were subsequently established by the separate acceptance below.
+
+## Controlled acoustic acceptance (2026-09-04)
+
+The final MATLAB/JTAG handshake capture is under
+`evidence/physical/acoustic_handshake_20260904_204104_671`. The saved MAT
+contains 6,084,352 samples per channel over 124.608 seconds. Its 95,068 PCM
+packets are contiguous with zero CRC, malformed, missing, duplicate,
+out-of-order, or frame-layout errors.
+
+The two automatically detected stimulus intervals were 46.5-53.5 seconds and
+57.0-62.5 seconds. CH1-CH7 each measured a 1000.0 Hz dominant peak in both;
+tone RMS was 21.30-36.63 dB above quiet and clipping was 0%. CH8 was all zero
+in both clean analysis plateaus. Detailed per-channel RMS, peak, DC, frequency,
+clipping, left/right deltas, protocol counters, plots, and hashes are in the
+evidence directory.
+
+The physical acoustic and MATLAB-live gates are therefore recorded:
+
+```
+MIC_ACOUSTIC_1KHZ_PHYSICAL_PASS
+MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS
+MIC_MATLAB_LIVE_PHYSICAL_PASS
+```

@@ -40,6 +40,15 @@ counter deltas, raw packet capture, Python validation, and MATLAB `udpport`
 live capture is summarized in
 [`docs/physical_evidence_20260903.md`](docs/physical_evidence_20260903.md).
 
+The final controlled 1 kHz physical acceptance is recorded under
+[`evidence/physical/acoustic_handshake_20260904_204104_671`](evidence/physical/acoustic_handshake_20260904_204104_671/acceptance_summary.md).
+MATLAB received 95,068 contiguous PCM packets with zero CRC, malformed, loss,
+duplicate, ordering, or frame-layout errors. Both requested tone intervals
+produced a 1000.0 Hz dominant peak on CH1-CH7, with RMS 21.30-36.63 dB above
+quiet and zero clipping; CH8 remained empty. This records
+`MIC_ACOUSTIC_1KHZ_PHYSICAL_PASS`, `MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS`, and
+`MIC_MATLAB_LIVE_PHYSICAL_PASS`.
+
 ## Offline regression
 
 The complete command-line gate auto-detects the installed tools and records a
@@ -72,4 +81,5 @@ It validates every MIC0 datagram while retaining only first/middle/last
 10-second windows and minute statistics. The 5-minute smoke and 1-hour soak
 evidence are stored under
 `evidence/physical/overnight_final_20260904/`; quiet-environment data does not
-constitute an acoustic PASS.
+constitute an acoustic PASS. The separate controlled test linked above closes
+the acoustic and MATLAB-live gates.

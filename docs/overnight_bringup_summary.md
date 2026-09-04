@@ -86,11 +86,17 @@ MIC_UDP_CONTINUOUS_1H_PASS
 
 ## Acoustic Status
 
-No audible stimulus was generated during the overnight run. Therefore
-`MIC_ACOUSTIC_1KHZ_PHYSICAL_PASS`, `MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS`, and
-`MIC_MATLAB_LIVE_PHYSICAL_PASS` remain deliberately unrecorded. The morning
-entry point is:
+The overnight run remained intentionally silent. A separate controlled test
+on 2026-09-04 completed the acoustic gate under
+`evidence/physical/acoustic_handshake_20260904_204104_671`. MATLAB received
+95,068 contiguous PCM packets with zero protocol errors. CH1-CH7 showed an
+exact 1000.0 Hz dominant peak in both requested tone intervals, RMS rose
+21.30-36.63 dB above quiet, clipping remained 0%, and CH8 stayed empty.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\microphone\scripts\run_morning_acoustic_test.ps1
+The following markers are now recorded:
+
+```
+MIC_ACOUSTIC_1KHZ_PHYSICAL_PASS
+MIC_ACOUSTIC_RESPONSE_PHYSICAL_PASS
+MIC_MATLAB_LIVE_PHYSICAL_PASS
 ```

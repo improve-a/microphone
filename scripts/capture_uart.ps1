@@ -2,7 +2,8 @@ param(
     [string]$Port = "COM4",
     [int]$Seconds = 8,
     [int]$Baud = 115200,
-    [string]$Output = ""
+    [string]$Output = "",
+    [string]$StopFile = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,19 +17,24 @@ $serial.ReadTimeout = 100
 $serial.Open()
 $deadline = (Get-Date).AddSeconds($Seconds)
 $builder = [Text.StringBuilder]::new()
+$writer = [IO.StreamWriter]::new($Output, $false, [Text.UTF8Encoding]::new($false))
+$writer.AutoFlush = $true
 try {
     while ((Get-Date) -lt $deadline) {
-        try { [void]$builder.Append($serial.ReadExisting()) } catch [TimeoutException] {}
+        if (-not [string]::IsNullOrWhiteSpace($StopFile) -and (Test-Path -LiteralPath $StopFile)) { break }
+        try {
+            $chunk = $serial.ReadExisting()
+            if ($chunk.Length -gt 0) {
+                [void]$builder.Append($chunk)
+                $writer.Write($chunk)
+            }
+        } catch [TimeoutException] {}
         Start-Sleep -Milliseconds 50
     }
 } finally {
     $serial.Close()
+    $writer.Dispose()
 }
 $captured = $builder.ToString()
-if ($captured.Length -eq 0) {
-    [IO.File]::WriteAllText($Output, "")
-} else {
-    [IO.File]::WriteAllText($Output, $captured)
-}
 Write-Output ("MIC_UART_CAPTURE path={0} bytes={1}" -f $Output, $builder.Length)
 if ($builder.Length -gt 0) { $captured }
